@@ -9,14 +9,21 @@
 [dir="rtl"]{--sans:'Noto Sans Arabic',Tahoma,sans-serif;--serif:'Noto Sans Arabic',Tahoma,serif}[dir="rtl"] .brand{direction:ltr}[dir="rtl"] .top-actions{margin-left:0;margin-right:auto}[dir="rtl"] .main-nav{margin-left:0;margin-right:55px}[dir="rtl"] .hero-copy{padding-left:0;padding-right:7.5%}[dir="rtl"] .hero-copy h1{line-height:1.4;font-size:clamp(48px,5.5vw,74px);letter-spacing:0}[dir="rtl"] .hero-copy h1 em,[dir="rtl"] h2 em{font-style:normal}[dir="rtl"] .section-heading h2{line-height:1.7;letter-spacing:0}[dir="rtl"] .eyebrow,[dir="rtl"] .card-family,[dir="rtl"] .gender-pill,[dir="rtl"] .result-meta{letter-spacing:0}[dir="rtl"] .section-intro{margin-left:3%;margin-right:0}[dir="rtl"] .sort-box select{padding-right:0;padding-left:17px}[dir="rtl"] .sort-box svg{right:auto;left:12px}[dir="rtl"] .modal-content h2,[dir="rtl"] .card-body h3{font-family:'Playfair Display',Georgia,serif;line-height:1.12}[dir="rtl"] .modal-description{font-family:var(--sans);line-height:1.9}[dir="rtl"] .footer-copy{margin-left:0;margin-right:auto}[dir="rtl"] .text-button svg,[dir="rtl"] .quick-view svg{transform:rotate(180deg)}
 @media(max-width:900px){[dir="rtl"] .hero-copy{padding-right:0}[dir="rtl"] .main-nav{margin-right:30px}}@media(max-width:620px){.top-actions{gap:9px}.language-select select{min-width:87px;font-size:11px}.hero{min-height:0;padding-top:42px;padding-bottom:24px}.hero-art{height:275px;margin-top:18px}.hero-bottle{transform:scale(.72) rotate(5deg)}.halo-one{width:225px;height:225px;right:17%;top:3%}.halo-two{width:80px;height:80px;right:13%;bottom:8%}[dir="rtl"] .section-intro{margin-left:0}[dir="rtl"] .hero-copy h1{font-size:49px}[dir="rtl"] .section-heading h2{font-size:32px;line-height:1.6}[dir="rtl"] .footer-copy{margin:22px 0 0}}
 .card-image-wrap{aspect-ratio:4/4.55}
-.price-row{display:flex;align-items:baseline;gap:8px;margin-top:15px;padding-top:11px;border-top:1px solid #edf0ec;font:11px var(--mono);color:#8b9790}
-.price-row strong{font-size:15px;color:var(--ink);font-weight:500}
-.price-row b{font-size:13px;color:var(--accent);font-weight:500}
-.price-row span{color:#b1bbb5}
-.rate-info{margin-left:auto;display:inline-flex;align-items:center;gap:9px;color:#84918a;letter-spacing:.03em;text-transform:none}
+.language-flags{display:flex;align-items:center;gap:3px}
+.language-button{display:grid;place-items:center;width:36px;height:36px;padding:4px;border:1px solid transparent;border-radius:50%;transition:border-color .2s,background .2s,transform .2s}
+.language-button:hover{background:#e9eee7;transform:translateY(-1px)}
+.language-button.active{border-color:var(--accent);background:#fff}
+.language-flag{display:block;width:26px;height:26px;overflow:hidden;border-radius:50%;box-shadow:0 0 0 1px rgba(27,41,39,.08)}
+.product-price{margin-top:12px;padding:11px 12px;background:#f2f5ef;border:1px solid #e4eade;border-radius:5px}
+.price-amounts{display:flex;align-items:baseline;justify-content:flex-start;flex-wrap:wrap;gap:9px;line-height:1.4;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.price-usd{font-size:20px;font-weight:500;color:var(--ink);white-space:nowrap}
+.price-separator{font-size:13px;color:#b4bcb6}
+.price-tl{font-size:14px;font-weight:500;color:var(--accent-dark);white-space:nowrap}
+.price-pending{display:block;margin-top:4px;color:var(--muted);font-size:10px;line-height:1.5}
+.detail-price{margin:16px 0 22px;padding:14px 16px}
+.detail-price .price-usd{font-size:27px}
+.detail-price .price-tl{font-size:17px}
+.result-meta{gap:12px;align-items:center;flex-wrap:wrap}
+.rate-info{margin-inline-start:auto;display:inline-flex;align-items:center;flex-wrap:wrap;gap:9px;color:#84918a;letter-spacing:.03em;text-transform:none}
 .rate-info small{color:#aab3ae;font:9px var(--mono);letter-spacing:.04em;text-transform:uppercase}
-.modal-price{display:flex;align-items:baseline;gap:9px;margin:3px 0 21px;font:12px var(--mono);color:#8b9790}
-.modal-price strong{font-size:20px;color:var(--ink);font-weight:500}
-.modal-price b{font-size:15px;color:var(--accent);font-weight:500}
-.modal-price small{font:9px var(--mono);color:#a0aaa4;letter-spacing:.04em;margin-left:5px}
-@media(max-width:620px){.rate-info{display:none}.price-row{margin-top:12px;padding-top:9px}.price-row strong{font-size:14px}.price-row b{font-size:12px}}
+@media(max-width:620px){.top-actions{gap:5px}.language-flags{gap:1px}.language-button{width:34px;height:34px}.product-price{padding:9px}.price-amounts{gap:6px}.price-usd{font-size:18px}.price-tl{font-size:12px}.rate-info{width:100%;margin-inline-start:0;line-height:1.6}.detail-price .price-tl{font-size:15px}}

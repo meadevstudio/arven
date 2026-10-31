@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { categories, perfumes } from './data'
-import { locales, localizePerfume, translations } from './i18n'
+import { categories, perfumes } from './data.js'
+import { locales, localizePerfume, translations } from './i18n.js'
 import './styles.css'
 
 const Icon = ({ name, size = 18, strokeWidth = 1.8 }) => {
@@ -16,6 +16,35 @@ const Icon = ({ name, size = 18, strokeWidth = 1.8 }) => {
     bookmark: <path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-6-3-6 3Z"/>
   }
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>
+}
+
+const languages = [
+  { code: 'tr', label: 'Türkçe' },
+  { code: 'en', label: 'English' },
+  { code: 'ar', label: 'العربية' }
+]
+
+function Flag({ language }) {
+  return <svg viewBox="0 0 32 32" className="language-flag" aria-hidden="true" focusable="false">
+    {language === 'tr' && <>
+      <path fill="#e30a17" d="M0 0h32v32H0z"/>
+      <circle cx="13" cy="16" r="8" fill="#fff"/>
+      <circle cx="15" cy="16" r="6.5" fill="#e30a17"/>
+      <path fill="#fff" d="m22 11.1 1.1 3.4h3.6l-2.9 2.1 1.1 3.4-2.9-2.1-2.9 2.1 1.1-3.4-2.9-2.1h3.6z"/>
+    </>}
+    {language === 'en' && <>
+      <path fill="#012169" d="M0 0h32v32H0z"/>
+      <path stroke="#fff" strokeWidth="7" d="m0 0 32 32M32 0 0 32"/>
+      <path stroke="#c8102e" strokeWidth="2.5" d="m0 0 32 32M32 0 0 32"/>
+      <path stroke="#fff" strokeWidth="11" d="M16 0v32M0 16h32"/>
+      <path stroke="#c8102e" strokeWidth="6" d="M16 0v32M0 16h32"/>
+    </>}
+    {language === 'ar' && <>
+      <path fill="#007a3d" d="M0 0h32v32H0z"/>
+      <text x="16" y="17" fill="#fff" fontSize="8" fontFamily="Tahoma, sans-serif" textAnchor="middle" lang="ar" direction="rtl">لا إله إلا الله</text>
+      <path stroke="#fff" strokeWidth="1.5" strokeLinecap="round" d="M8 22h16m-2-1v2"/>
+    </>}
+  </svg>
 }
 
 function App() {
@@ -37,7 +66,12 @@ function App() {
     } catch { return null }
   })
   const [rateStatus, setRateStatus] = useState('loading')
-  const [rateUpdatedAt, setRateUpdatedAt] = useState(null)
+  const [rateUpdatedAt, setRateUpdatedAt] = useState(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem('arven-usdtry') || 'null')
+      return Number.isFinite(cached?.updatedAt) ? new Date(cached.updatedAt) : null
+    } catch { return null }
+  })
 
   useEffect(() => {
     document.documentElement.lang = lang
@@ -48,25 +82,32 @@ function App() {
 
   useEffect(() => {
     let cancelled = false
+    let lastRate = usdTry
+    let controller
     const refreshRate = async () => {
+      controller = new AbortController()
+      const timeout = window.setTimeout(() => controller.abort(), 10000)
       try {
-        const response = await fetch('https://api.frankfurter.app/latest?from=USD&to=TRY')
+        const response = await fetch('https://api.frankfurter.app/latest?from=USD&to=TRY', { signal: controller.signal })
         if (!response.ok) throw new Error('Exchange rate request failed')
         const payload = await response.json()
         const nextRate = Number(payload?.rates?.TRY)
         if (!Number.isFinite(nextRate) || nextRate <= 0) throw new Error('Invalid exchange rate')
         if (cancelled) return
+        lastRate = nextRate
         setUsdTry(nextRate)
         setRateStatus('live')
         setRateUpdatedAt(new Date())
         try { localStorage.setItem('arven-usdtry', JSON.stringify({ rate: nextRate, updatedAt: Date.now() })) } catch { /* Storage may be unavailable. */ }
       } catch {
-        if (!cancelled) setRateStatus(usdTry ? 'stale' : 'unavailable')
+        if (!cancelled) setRateStatus(lastRate ? 'stale' : 'unavailable')
+      } finally {
+        window.clearTimeout(timeout)
       }
     }
     refreshRate()
     const interval = window.setInterval(refreshRate, 60 * 60 * 1000)
-    return () => { cancelled = true; window.clearInterval(interval) }
+    return () => { cancelled = true; controller?.abort(); window.clearInterval(interval) }
   }, [])
 
   const localizedPerfumes = useMemo(() => perfumes.map(p => localizePerfume(p, lang)), [lang])
@@ -92,7 +133,12 @@ function App() {
       <div className="topbar-inner">
         <a className="brand" href="#top" aria-label={t.home}><span className="brand-mark">A</span><span>ARVEN</span></a>
         <nav className="main-nav" aria-label={t.menu}><a className="active" href="#kesif">{t.discover}</a><a href="#notlar">{t.scentNotes}</a><a href="#hakkinda">{t.about}</a></nav>
-        <div className="top-actions"><button className={`icon-button ${showFavorites ? 'selected' : ''}`} onClick={() => setShowFavorites(!showFavorites)} aria-label={t.favorites} aria-pressed={showFavorites}><Icon name="heart"/><span className="favorite-count">{favorites.length || ''}</span></button><label className="language-select"><select value={lang} onChange={e => setLang(e.target.value)} aria-label={t.language} dir="ltr"><option value="tr">Türkçe</option><option value="en">English</option><option value="ar">العربية</option></select><Icon name="chevron" size={14}/></label></div>
+        <div className="top-actions">
+          <button className={`icon-button ${showFavorites ? 'selected' : ''}`} onClick={() => setShowFavorites(!showFavorites)} aria-label={t.favorites} aria-pressed={showFavorites}><Icon name="heart"/><span className="favorite-count">{favorites.length || ''}</span></button>
+          <div className="language-flags" role="group" aria-label={t.language} dir="ltr">
+            {languages.map(language => <button key={language.code} type="button" className={`language-button ${lang === language.code ? 'active' : ''}`} onClick={() => setLang(language.code)} aria-label={language.label} title={language.label} aria-pressed={lang === language.code}><Flag language={language.code}/></button>)}
+          </div>
+        </div>
       </div>
     </header>
 
@@ -115,13 +161,28 @@ function App() {
   </div>
 }
 
-function formatTryPrice(usd, usdTry) {
-  if (!Number.isFinite(usdTry)) return '₺—'
-  return `₺${new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(usd * usdTry)}`
+function Price({ perfume, usdTry, t, className = '' }) {
+  const tlPrice = Number.isFinite(usdTry) && usdTry > 0
+    ? `${new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(perfume.priceUsd * usdTry)} TL`
+    : null
+  return <div className={`product-price ${className}`} aria-label={t.price}>
+    <div className="price-amounts" dir="ltr">
+      <strong className="price-usd">{`$${perfume.priceUsd}`}</strong>
+      {tlPrice && <><span className="price-separator">/</span><span className="price-tl">≈ {tlPrice}</span></>}
+    </div>
+    {!tlPrice && <small className="price-pending">{t.rateUnavailable}</small>}
+  </div>
 }
 
 function PerfumeCard({ perfume, index, favorite, onFavorite, onOpen, t, usdTry }) {
-  return <article className="perfume-card" style={{'--delay': `${Math.min(index * 25, 300)}ms`}}><div className="card-image-wrap"><img src={perfume.image} alt={`${perfume.name} — ${t.image}`} loading="lazy"/><span className={`gender-pill ${perfume.gender.toLowerCase()}`}>{perfume.genderLabel}</span><button className={`heart-button ${favorite ? 'liked' : ''}`} onClick={onFavorite} aria-label={favorite ? t.removeFavorite : t.addFavorite} aria-pressed={favorite}><Icon name="heart" size={17}/></button><button className="quick-view" onClick={onOpen}>{t.view} <Icon name="arrow" size={15}/></button></div><div className="card-body"><div className="card-title-row"><div><p className="card-family">{perfume.family}</p><h3 dir="auto">{perfume.name}</h3></div></div><div className="note-row">{perfume.notes.slice(0,3).map(note => <span key={note}>{note}</span>)}</div><div className="price-row" aria-label={`${t.price}: $${perfume.priceUsd}`}><strong>${perfume.priceUsd}</strong><span>≈</span><b>{formatTryPrice(perfume.priceUsd, usdTry)}</b></div></div></article>
+  return <article className="perfume-card" style={{'--delay': `${Math.min(index * 25, 300)}ms`}}>
+    <div className="card-image-wrap"><img src={perfume.image} alt={`${perfume.name} — ${t.image}`} loading="lazy"/><span className={`gender-pill ${perfume.gender.toLowerCase()}`}>{perfume.genderLabel}</span><button className={`heart-button ${favorite ? 'liked' : ''}`} onClick={onFavorite} aria-label={favorite ? t.removeFavorite : t.addFavorite} aria-pressed={favorite}><Icon name="heart" size={17}/></button><button className="quick-view" onClick={onOpen}>{t.view} <Icon name="arrow" size={15}/></button></div>
+    <div className="card-body">
+      <div className="card-title-row"><div><p className="card-family">{perfume.family}</p><h3 dir="auto">{perfume.name}</h3></div></div>
+      <Price perfume={perfume} usdTry={usdTry} t={t}/>
+      <div className="note-row">{perfume.notes.slice(0,3).map(note => <span key={note}>{note}</span>)}</div>
+    </div>
+  </article>
 }
 
 function DetailModal({ perfume, favorite, onFavorite, onClose, t, usdTry }) {
@@ -132,7 +193,7 @@ function DetailModal({ perfume, favorite, onFavorite, onClose, t, usdTry }) {
     document.body.style.overflow = 'hidden'
     return () => { document.removeEventListener('keydown', closeOnEscape); document.body.style.overflow = previousOverflow }
   }, [onClose])
-  return <div className="modal-backdrop" onMouseDown={e => e.target === e.currentTarget && onClose()}><div className="detail-modal" role="dialog" aria-modal="true" aria-label={perfume.name}><button className="modal-close" onClick={onClose} aria-label={t.close} autoFocus><Icon name="close"/></button><div className="modal-image"><img src={perfume.image} alt=""/></div><div className="modal-content"><p className="eyebrow">{perfume.genderLabel} / {perfume.family}</p><h2 dir="auto">{perfume.name}</h2><div className="modal-price"><strong>${perfume.priceUsd}</strong><span>≈</span><b>{formatTryPrice(perfume.priceUsd, usdTry)}</b><small>{t.estimatedPrice}</small></div><p className="modal-description">{perfume.description}</p><div className="detail-stats"><div><small>{t.sillage}</small><strong>{perfume.sillage}</strong></div></div><div className="notes-block"><small>{t.notes}</small><div>{perfume.notes.map(note => <span key={note}>{note}</span>)}</div></div><button className={`save-button ${favorite ? 'saved' : ''}`} onClick={onFavorite}><Icon name={favorite ? 'bookmark' : 'heart'} size={17}/>{favorite ? t.saved : t.addFavorite}</button></div></div></div>
+  return <div className="modal-backdrop" onMouseDown={e => e.target === e.currentTarget && onClose()}><div className="detail-modal" role="dialog" aria-modal="true" aria-label={perfume.name}><button className="modal-close" onClick={onClose} aria-label={t.close} autoFocus><Icon name="close"/></button><div className="modal-image"><img src={perfume.image} alt=""/></div><div className="modal-content"><p className="eyebrow">{perfume.genderLabel} / {perfume.family}</p><h2 dir="auto">{perfume.name}</h2><Price perfume={perfume} usdTry={usdTry} t={t} className="detail-price"/><p className="modal-description">{perfume.description}</p><div className="detail-stats"><div><small>{t.sillage}</small><strong>{perfume.sillage}</strong></div></div><div className="notes-block"><small>{t.notes}</small><div>{perfume.notes.map(note => <span key={note}>{note}</span>)}</div></div><button className={`save-button ${favorite ? 'saved' : ''}`} onClick={onFavorite}><Icon name={favorite ? 'bookmark' : 'heart'} size={17}/>{favorite ? t.saved : t.addFavorite}</button></div></div></div>
 }
 
 createRoot(document.getElementById('root')).render(<App />)

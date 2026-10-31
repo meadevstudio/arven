@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { categories, perfumes } from './data.js'
 import { locales, localizePerfume, translations } from './i18n.js'
@@ -47,6 +47,111 @@ function Flag({ language }) {
   </svg>
 }
 
+const RATE_REFRESH_MS = 60 * 60 * 1000
+
+function readSavedRate() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('arven-usdtry') || 'null')
+    if (Number.isFinite(saved?.rate) && saved.rate > 0) return saved
+  } catch { /* Storage may be unavailable. */ }
+  return null
+}
+
+function useExchangeRate() {
+  const [savedRate, setSavedRate] = useState(readSavedRate)
+  const [status, setStatus] = useState('loading')
+
+  useEffect(() => {
+    let cancelled = false
+    let lastRate = readSavedRate()
+    let controller
+    let timer
+    let inFlight = false
+    const refresh = async () => {
+      if (cancelled || inFlight) return
+      inFlight = true
+      window.clearTimeout(timer)
+      controller = new AbortController()
+      const timeout = window.setTimeout(() => controller.abort(), 18000)
+      let nextRefresh = 60000
+      try {
+        const response = await fetch('/api/usd-try', { signal: controller.signal, cache: 'no-cache' })
+        if (!response.ok) throw new Error(`Exchange rate unavailable (${response.status})`)
+        const payload = await response.json()
+        if (!Number.isFinite(payload.rate) || payload.rate <= 0) throw new Error('Invalid exchange rate')
+        if (cancelled) return
+        lastRate = { ...payload, updatedAt: Date.now() }
+        setSavedRate(lastRate)
+        setStatus(payload.stale ? 'stale' : 'live')
+        try { localStorage.setItem('arven-usdtry', JSON.stringify(lastRate)) } catch { /* Storage may be unavailable. */ }
+        const rateAge = Math.max(0, Date.now() - Date.parse(payload.fetchedAt))
+        nextRefresh = payload.stale ? 60000 : Math.max(60000, RATE_REFRESH_MS - (Number.isFinite(rateAge) ? rateAge : 0))
+      } catch {
+        if (!cancelled) setStatus(lastRate ? 'stale' : 'unavailable')
+      } finally {
+        window.clearTimeout(timeout)
+        inFlight = false
+        if (!cancelled) timer = window.setTimeout(refresh, nextRefresh)
+      }
+    }
+    refresh()
+    window.addEventListener('online', refresh)
+    return () => {
+      cancelled = true
+      controller?.abort()
+      window.clearTimeout(timer)
+      window.removeEventListener('online', refresh)
+    }
+  }, [])
+
+  return { rate: savedRate?.rate ?? null, status, updatedAt: savedRate?.updatedAt, source: savedRate?.source, rateDate: savedRate?.rateDate }
+}
+
+function PerfumeName({ name, as: Heading = 'h3' }) {
+  const headingRef = useRef(null)
+  const textRef = useRef(null)
+  useLayoutEffect(() => {
+    const heading = headingRef.current
+    const text = textRef.current
+    let active = true
+    let frame
+    let previousWidth = heading.clientWidth
+    const fit = () => {
+      if (!active) return
+      text.style.fontSize = ''
+      const available = heading.clientWidth
+      const natural = text.getBoundingClientRect().width
+      const base = parseFloat(window.getComputedStyle(heading).fontSize)
+      if (available > 0 && natural > available) {
+        text.style.fontSize = `${Math.floor(base * available / natural * 100) / 100}px`
+      }
+    }
+    const scheduleFit = () => {
+      if (!active) return
+      window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(fit)
+    }
+    fit()
+    const observer = new ResizeObserver(([entry]) => {
+      // Font sizing may change height; only a width change needs another fit.
+      if (Math.abs(entry.contentRect.width - previousWidth) > 0.25) {
+        previousWidth = entry.contentRect.width
+        scheduleFit()
+      }
+    })
+    observer.observe(heading)
+    document.fonts.ready.then(scheduleFit)
+    document.fonts.addEventListener('loadingdone', scheduleFit)
+    return () => {
+      active = false
+      window.cancelAnimationFrame(frame)
+      observer.disconnect()
+      document.fonts.removeEventListener('loadingdone', scheduleFit)
+    }
+  }, [name])
+  return <Heading ref={headingRef} className="perfume-name" dir="auto" title={name}><span ref={textRef}>{name}</span></Heading>
+}
+
 function App() {
   const [lang, setLang] = useState(() => {
     try { return localStorage.getItem('arven-language') in translations ? localStorage.getItem('arven-language') : 'tr' } catch { return 'tr' }
@@ -59,19 +164,12 @@ function App() {
   const [selected, setSelected] = useState(null)
   const [favorites, setFavorites] = useState([])
   const [showFavorites, setShowFavorites] = useState(false)
-  const [usdTry, setUsdTry] = useState(() => {
-    try {
-      const cached = JSON.parse(localStorage.getItem('arven-usdtry') || 'null')
-      return Number.isFinite(cached?.rate) ? cached.rate : null
-    } catch { return null }
-  })
-  const [rateStatus, setRateStatus] = useState('loading')
-  const [rateUpdatedAt, setRateUpdatedAt] = useState(() => {
-    try {
-      const cached = JSON.parse(localStorage.getItem('arven-usdtry') || 'null')
-      return Number.isFinite(cached?.updatedAt) ? new Date(cached.updatedAt) : null
-    } catch { return null }
-  })
+  const exchangeRate = useExchangeRate()
+  const usdTry = exchangeRate.rate
+  const rateStatus = exchangeRate.status
+  const rateTitle = usdTry
+    ? `${t.rateUpdated} · ${new Date(exchangeRate.updatedAt).toLocaleString(locale)}${exchangeRate.source ? ` · ${exchangeRate.source}` : ''}${exchangeRate.rateDate ? ` · ${exchangeRate.rateDate}` : ''}`
+    : rateStatus === 'loading' ? t.rateLoading : t.rateUnavailable
 
   useEffect(() => {
     document.documentElement.lang = lang
@@ -79,36 +177,6 @@ function App() {
     document.title = lang === 'tr' ? 'Arven — Parfüm keşif günlüğü' : lang === 'ar' ? 'أرفين — يوميات اكتشاف العطور' : 'Arven — Fragrance discovery journal'
     try { localStorage.setItem('arven-language', lang) } catch { /* Storage may be unavailable in private browsing. */ }
   }, [lang])
-
-  useEffect(() => {
-    let cancelled = false
-    let lastRate = usdTry
-    let controller
-    const refreshRate = async () => {
-      controller = new AbortController()
-      const timeout = window.setTimeout(() => controller.abort(), 10000)
-      try {
-        const response = await fetch('https://api.frankfurter.app/latest?from=USD&to=TRY', { signal: controller.signal })
-        if (!response.ok) throw new Error('Exchange rate request failed')
-        const payload = await response.json()
-        const nextRate = Number(payload?.rates?.TRY)
-        if (!Number.isFinite(nextRate) || nextRate <= 0) throw new Error('Invalid exchange rate')
-        if (cancelled) return
-        lastRate = nextRate
-        setUsdTry(nextRate)
-        setRateStatus('live')
-        setRateUpdatedAt(new Date())
-        try { localStorage.setItem('arven-usdtry', JSON.stringify({ rate: nextRate, updatedAt: Date.now() })) } catch { /* Storage may be unavailable. */ }
-      } catch {
-        if (!cancelled) setRateStatus(lastRate ? 'stale' : 'unavailable')
-      } finally {
-        window.clearTimeout(timeout)
-      }
-    }
-    refreshRate()
-    const interval = window.setInterval(refreshRate, 60 * 60 * 1000)
-    return () => { cancelled = true; controller?.abort(); window.clearInterval(interval) }
-  }, [])
 
   const localizedPerfumes = useMemo(() => perfumes.map(p => localizePerfume(p, lang)), [lang])
 
@@ -151,17 +219,17 @@ function App() {
       <section className="catalog-section" id="notlar">
         <div className="section-heading"><div><p className="eyebrow">{t.library}</p><h2>{t.headingFirst} <em>{t.headingEmphasis}</em> {t.headingLast}</h2></div><p className="section-intro">{t.intro}</p></div>
         <div className="controls"><div className="category-tabs" role="tablist" aria-label={t.library}>{categories.map(c => <button key={c.key} className={category === c.key ? 'active' : ''} onClick={() => {setCategory(c.key); setShowFavorites(false)}} role="tab" aria-selected={category === c.key}>{t.categories[c.key]}<span>{c.count}</span></button>)}</div><div className="filter-row"><label className="search-box"><Icon name="search" size={17}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder={t.search} aria-label={t.search}/></label><label className="sort-box"><span>{t.sort}</span><select value={sort} onChange={e => setSort(e.target.value)} aria-label={t.sort}><option value="featured">{t.featured}</option><option value="name">{t.nameSort}</option></select><Icon name="chevron" size={15}/></label></div></div>
-        <div className="result-meta"><span>{showFavorites ? t.favoriteCollection : t.categories[category]} <strong>{filtered.length}</strong></span><span className="rate-info" title={rateUpdatedAt ? `${t.rateUpdated} · ${rateUpdatedAt.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}` : t.rateLoading}>{usdTry ? `${t.usdRate} = ${usdTry.toFixed(2)} TRY` : rateStatus === 'unavailable' ? t.rateUnavailable : t.rateLoading}<small>{t.hourly}</small></span>{(query || showFavorites) && <button className="clear-button" onClick={() => {setQuery('');setShowFavorites(false)}}>{t.clear}</button>}</div>
-        {filtered.length > 0 ? <div className="perfume-grid">{filtered.map((p, i) => <PerfumeCard key={p.id} perfume={p} index={i} favorite={favorites.includes(p.id)} onFavorite={() => toggleFavorite(p.id)} onOpen={() => setSelected(p.id)} t={t} usdTry={usdTry}/>)}</div> : <div className="empty-state"><span className="empty-icon"><Icon name="search" size={25}/></span><h3>{t.noResults}</h3><p>{t.noResultsText}</p><button className="text-button" onClick={() => {setQuery('');setShowFavorites(false)}}>{t.showAll} <Icon name="arrow" size={16}/></button></div>}
+        <div className="result-meta"><span>{showFavorites ? t.favoriteCollection : t.categories[category]} <strong>{filtered.length}</strong></span><span className="rate-info" title={rateTitle} aria-live="polite">{usdTry ? `${t.usdRate} = ${usdTry.toFixed(2)} ${t.tryCurrency}` : rateStatus === 'loading' ? t.rateLoading : t.rateUnavailable}<small>{rateStatus === 'stale' ? t.rateStale : usdTry ? t.hourly : ''}</small></span>{(query || showFavorites) && <button className="clear-button" onClick={() => {setQuery('');setShowFavorites(false)}}>{t.clear}</button>}</div>
+        {filtered.length > 0 ? <div className="perfume-grid">{filtered.map((p, i) => <PerfumeCard key={p.id} perfume={p} index={i} favorite={favorites.includes(p.id)} onFavorite={() => toggleFavorite(p.id)} onOpen={() => setSelected(p.id)} t={t} usdTry={usdTry} rateStatus={rateStatus}/>)}</div> : <div className="empty-state"><span className="empty-icon"><Icon name="search" size={25}/></span><h3>{t.noResults}</h3><p>{t.noResultsText}</p><button className="text-button" onClick={() => {setQuery('');setShowFavorites(false)}}>{t.showAll} <Icon name="arrow" size={16}/></button></div>}
       </section>
     </main>
 
     <footer id="hakkinda"><div className="footer-brand"><span className="brand-mark">A</span><div><strong>ARVEN</strong><p>{t.tagline}</p></div></div><p>{t.footerText}</p><span className="footer-copy" dir="ltr">© {new Date().getFullYear()} Arven</span></footer>
-    {selectedPerfume && <DetailModal perfume={selectedPerfume} favorite={favorites.includes(selectedPerfume.id)} onFavorite={() => toggleFavorite(selectedPerfume.id)} onClose={() => setSelected(null)} t={t} usdTry={usdTry}/>} 
+    {selectedPerfume && <DetailModal perfume={selectedPerfume} favorite={favorites.includes(selectedPerfume.id)} onFavorite={() => toggleFavorite(selectedPerfume.id)} onClose={() => setSelected(null)} t={t} usdTry={usdTry} rateStatus={rateStatus}/>} 
   </div>
 }
 
-function Price({ perfume, usdTry, t, className = '' }) {
+function Price({ perfume, usdTry, t, rateStatus, className = '' }) {
   const tlPrice = Number.isFinite(usdTry) && usdTry > 0
     ? `${new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(perfume.priceUsd * usdTry)} TL`
     : null
@@ -170,22 +238,22 @@ function Price({ perfume, usdTry, t, className = '' }) {
       <strong className="price-usd">{`$${perfume.priceUsd}`}</strong>
       {tlPrice && <><span className="price-separator">/</span><span className="price-tl">≈ {tlPrice}</span></>}
     </div>
-    {!tlPrice && <small className="price-pending">{t.rateUnavailable}</small>}
+    {!tlPrice && <small className="price-pending">{rateStatus === 'loading' ? t.rateLoading : t.rateUnavailable}</small>}
   </div>
 }
 
-function PerfumeCard({ perfume, index, favorite, onFavorite, onOpen, t, usdTry }) {
+function PerfumeCard({ perfume, index, favorite, onFavorite, onOpen, t, usdTry, rateStatus }) {
   return <article className="perfume-card" style={{'--delay': `${Math.min(index * 25, 300)}ms`}}>
     <div className="card-image-wrap"><img src={perfume.image} alt={`${perfume.name} — ${t.image}`} loading="lazy"/><span className={`gender-pill ${perfume.gender.toLowerCase()}`}>{perfume.genderLabel}</span><button className={`heart-button ${favorite ? 'liked' : ''}`} onClick={onFavorite} aria-label={favorite ? t.removeFavorite : t.addFavorite} aria-pressed={favorite}><Icon name="heart" size={17}/></button><button className="quick-view" onClick={onOpen}>{t.view} <Icon name="arrow" size={15}/></button></div>
     <div className="card-body">
-      <div className="card-title-row"><div><p className="card-family">{perfume.family}</p><h3 dir="auto">{perfume.name}</h3></div></div>
-      <Price perfume={perfume} usdTry={usdTry} t={t}/>
+      <div className="card-title-row"><div><p className="card-family">{perfume.family}</p><PerfumeName name={perfume.name}/></div></div>
+      <Price perfume={perfume} usdTry={usdTry} t={t} rateStatus={rateStatus}/>
       <div className="note-row">{perfume.notes.slice(0,3).map(note => <span key={note}>{note}</span>)}</div>
     </div>
   </article>
 }
 
-function DetailModal({ perfume, favorite, onFavorite, onClose, t, usdTry }) {
+function DetailModal({ perfume, favorite, onFavorite, onClose, t, usdTry, rateStatus }) {
   useEffect(() => {
     const closeOnEscape = e => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', closeOnEscape)
@@ -193,7 +261,7 @@ function DetailModal({ perfume, favorite, onFavorite, onClose, t, usdTry }) {
     document.body.style.overflow = 'hidden'
     return () => { document.removeEventListener('keydown', closeOnEscape); document.body.style.overflow = previousOverflow }
   }, [onClose])
-  return <div className="modal-backdrop" onMouseDown={e => e.target === e.currentTarget && onClose()}><div className="detail-modal" role="dialog" aria-modal="true" aria-label={perfume.name}><button className="modal-close" onClick={onClose} aria-label={t.close} autoFocus><Icon name="close"/></button><div className="modal-image"><img src={perfume.image} alt=""/></div><div className="modal-content"><p className="eyebrow">{perfume.genderLabel} / {perfume.family}</p><h2 dir="auto">{perfume.name}</h2><Price perfume={perfume} usdTry={usdTry} t={t} className="detail-price"/><p className="modal-description">{perfume.description}</p><div className="detail-stats"><div><small>{t.sillage}</small><strong>{perfume.sillage}</strong></div></div><div className="notes-block"><small>{t.notes}</small><div>{perfume.notes.map(note => <span key={note}>{note}</span>)}</div></div><button className={`save-button ${favorite ? 'saved' : ''}`} onClick={onFavorite}><Icon name={favorite ? 'bookmark' : 'heart'} size={17}/>{favorite ? t.saved : t.addFavorite}</button></div></div></div>
+  return <div className="modal-backdrop" onMouseDown={e => e.target === e.currentTarget && onClose()}><div className="detail-modal" role="dialog" aria-modal="true" aria-label={perfume.name}><button className="modal-close" onClick={onClose} aria-label={t.close} autoFocus><Icon name="close"/></button><div className="modal-image"><img src={perfume.image} alt=""/></div><div className="modal-content"><p className="eyebrow">{perfume.genderLabel} / {perfume.family}</p><PerfumeName name={perfume.name} as="h2"/><Price perfume={perfume} usdTry={usdTry} t={t} rateStatus={rateStatus} className="detail-price"/><p className="modal-description">{perfume.description}</p><div className="detail-stats"><div><small>{t.sillage}</small><strong>{perfume.sillage}</strong></div></div><div className="notes-block"><small>{t.notes}</small><div>{perfume.notes.map(note => <span key={note}>{note}</span>)}</div></div><button className={`save-button ${favorite ? 'saved' : ''}`} onClick={onFavorite}><Icon name={favorite ? 'bookmark' : 'heart'} size={17}/>{favorite ? t.saved : t.addFavorite}</button></div></div></div>
 }
 
 createRoot(document.getElementById('root')).render(<App />)

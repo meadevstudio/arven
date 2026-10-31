@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/usd-try.js": {
+      "maxDuration": 20
+    }
+  }
+}

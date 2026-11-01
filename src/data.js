@@ -166,12 +166,12 @@ const unisex = [
   ['Erba Pura','Fruity Musk',['narenciye','meyve','misk'],'Narenciye ve tropikal meyvelerin parlaklığı, miskin ipeksi tabanında uzun süre kalır.',4.4,'8–10 saat','Güçlü'],
   ['Naxos','Amber Fougere',['bal','tütün','lavanta'],'Balın sıcak tatlılığı ve tütün, lavantanın aromatik temizliğiyle dengelenir.',4.8,'9–11 saat','Güçlü'],
   ['Ombre Nomade','Woody Oud',['oud','gül','ahududu'],'Oudun güçlü karanlığı, gül ve ahududunun meyveli dokusuyla parlatılır.',4.7,'10+ saat','Çok güçlü'],
-  ['Huram Blanc','Special Blend',['amber','odun','misk'],'Arven seçkisine özel karışım: amberin sıcaklığı, odunun kuru dokusu ve ten miskinin yumuşak izi.',4.9,'8–10 saat','Güçlü']
+  ['Huram Blanc','Special Blend',['amber','odun','misk'],'Arven’e özel parfüm karışımı: amberin sıcaklığı, odunun kuru dokusu ve ten miskinin yumuşak izi.',4.9,'8–10 saat','Güçlü']
 ].map((x,i)=>make(x[0],'Unisex',x[1],x[2],x[3],x[4],x[5],x[6],i+50))
 
 export const perfumes = [...men, ...women, ...unisex]
 export const categories = [
-  { key: 'Tümü', label: 'Tüm seçki', count: perfumes.length },
+  { key: 'Tümü', label: 'Tüm parfümler', count: perfumes.length },
   { key: 'Erkek', label: 'Erkek', count: men.length },
   { key: 'Kadın', label: 'Kadın', count: women.length },
   { key: 'Unisex', label: 'Unisex', count: unisex.length }

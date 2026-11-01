@@ -2,7 +2,8 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import { createRoot } from 'react-dom/client'
 import { categories, perfumes } from './data.js'
 import { locales, localizePerfume, translations } from './i18n.js'
-import { filterPerfumes, normalizeSearch } from './catalog.js'
+import { filterPerfumes } from './catalog.js'
+import NoteMultiSelect from './NoteMultiSelect.jsx'
 import './styles.css'
 
 const Icon = ({ name, size = 18, strokeWidth = 1.8 }) => {
@@ -199,7 +200,6 @@ function App() {
   const [genders, setGenders] = useState([])
   const [selectedNotes, setSelectedNotes] = useState([])
   const [filterOpen, setFilterOpen] = useState(false)
-  const [noteSearch, setNoteSearch] = useState('')
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState('featured')
   const [selected, setSelected] = useState(null)
@@ -232,7 +232,6 @@ function App() {
     return [...options.values()].sort((a, b) => a.label.localeCompare(b.label, locale))
   }, [localizedPerfumes, locale])
   const noteLabels = useMemo(() => new Map(noteOptions.map(note => [note.key, note.label])), [noteOptions])
-  const visibleNoteOptions = noteOptions.filter(note => normalizeSearch(note.label).includes(normalizeSearch(noteSearch).trim()))
   const filtered = useMemo(() => filterPerfumes(localizedPerfumes, {
     genders, notes: selectedNotes, query, favorites, onlyFavorites: showFavorites, sort, locale
   }), [genders, selectedNotes, query, sort, showFavorites, favorites, localizedPerfumes, locale])
@@ -244,7 +243,6 @@ function App() {
     setSelectedNotes([])
     setQuery('')
     setShowFavorites(false)
-    setNoteSearch('')
   }
   const showFilteredResults = () => {
     setFilterOpen(false)
@@ -312,8 +310,8 @@ function App() {
                 else { setGenders([c.key]); setShowFavorites(false) }
               }} aria-pressed={active}>{t.categories[c.key]}<span>{c.count}</span></button>
             })}
-            <button type="button" className={`favorites-tab ${showFavorites ? 'active' : ''}`} onClick={toggleFavoriteFilter} aria-pressed={showFavorites}><Icon name="heart" size={15}/>{t.favorites}<span>{favorites.length}</span></button>
           </div>
+          <div className="favorites-row"><button type="button" className={`favorites-tab ${showFavorites ? 'active' : ''}`} onClick={toggleFavoriteFilter} aria-pressed={showFavorites}><Icon name="heart" size={16}/>{t.favorites}<span>{favorites.length}</span></button></div>
           <div className="filter-row">
             <label className="search-box"><Icon name="search" size={17}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder={t.search} aria-label={t.search}/></label>
             <button type="button" className={`filter-toggle ${filterOpen ? 'active' : ''}`} onClick={() => setFilterOpen(current => !current)} aria-expanded={filterOpen} aria-controls="perfume-filters"><Icon name="filter" size={17}/>{t.filter}{filterCount > 0 && <span className="filter-count">{filterCount}</span>}</button>
@@ -323,7 +321,7 @@ function App() {
         {filterOpen && <section className="filter-panel" id="perfume-filters" aria-label={t.filters}>
           <div className="filter-panel-heading"><div><h2>{t.filters}</h2><p>{t.filterHelp}</p></div><button type="button" className="clear-button" onClick={clearFilters}>{t.clear}</button></div>
           <fieldset className="filter-group"><legend>{t.gender}</legend><div className="filter-options gender-options">{categories.filter(c => c.key !== 'Tümü').map(c => <label key={c.key} className="filter-option"><input type="checkbox" checked={genders.includes(c.key)} onChange={() => toggleGender(c.key)}/><span>{t.categories[c.key]}</span><small>{c.count}</small></label>)}</div></fieldset>
-          <fieldset className="filter-group"><legend>{t.notes}</legend><label className="filter-note-search"><Icon name="search" size={15}/><input type="search" value={noteSearch} onChange={e => setNoteSearch(e.target.value)} placeholder={t.searchNotes} aria-label={t.searchNotes}/></label><div className="filter-options note-options">{visibleNoteOptions.map(note => <label key={note.key} className="filter-option"><input type="checkbox" checked={selectedNotes.includes(note.key)} onChange={() => toggleNote(note.key)}/><span>{note.label}</span><small>{note.count}</small></label>)}{!visibleNoteOptions.length && <p className="filter-empty">{t.noNotes}</p>}</div></fieldset>
+          <NoteMultiSelect options={noteOptions} selected={selectedNotes} onToggle={toggleNote} t={t}/>
           <button type="button" className="primary-button filter-done" onClick={showFilteredResults}>{t.showResults} <span>{filtered.length}</span><Icon name="arrow" size={16}/></button>
         </section>}
         {filterCount > 0 && <div className="active-filters" aria-label={t.activeFilters}>{genders.map(gender => <button key={gender} type="button" className="filter-chip" onClick={() => toggleGender(gender)} aria-label={`${t.removeFilter}: ${t.categories[gender]}`}>{t.categories[gender]}<Icon name="close" size={12}/></button>)}{selectedNotes.map(key => <button key={key} type="button" className="filter-chip" onClick={() => toggleNote(key)} aria-label={`${t.removeFilter}: ${noteLabels.get(key)}`}>{noteLabels.get(key)}<Icon name="close" size={12}/></button>)}</div>}

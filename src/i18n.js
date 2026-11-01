@@ -2,6 +2,7 @@ export const locales = { tr: 'tr-TR', en: 'en-US', ar: 'ar-SA' }
 
 export const translations = {
   tr: {
+    selectNotes: 'Nota seç', selectedNote: 'nota seçili', selectedNotes: 'nota seçili',
     filter: 'Filtrele', filters: 'Filtreler', gender: 'Cinsiyet', searchNotes: 'Notalarda ara', noNotes: 'Nota bulunamadı', showResults: 'Parfümleri göster', activeFilters: 'Seçili filtreler', removeFilter: 'Filtreyi kaldır', filterHelp: 'Birden fazla seçim yapabilirsin. Her gruptaki seçimlerden birine uyması yeterlidir.', categoriesLabel: 'Parfüm kategorileri', perfumes: 'Parfümler', priceLow: 'Ucuzdan pahalıya', priceHigh: 'Pahalıdan ucuza', showMatchingPerfumes: 'Bu notaya sahip parfümleri göster',
     home: 'Arven ana sayfa', menu: 'Ana menü', discover: 'Keşfet', scentNotes: 'Koku notları', about: 'Arven hakkında', favorites: 'Favoriler', language: 'Dil seçimi',
     journal: 'KOKU GÜNLÜĞÜ', heroFirst: 'Kendine ait', heroEmphasis: 'bir iz', heroLast: 'bul.', heroText: 'Parfümleri keşfet, koku notalarını tanı ve sana en çok yakışanı bul.', lucky: 'Bir parfüm keşfet',
@@ -11,6 +12,7 @@ export const translations = {
     rateLoading: 'Kur yükleniyor', rateUnavailable: 'TL fiyatı için kur alınamadı', rateStale: 'Son alınan kur kullanılıyor', rateUpdated: 'Kur güncellemesi', hourly: 'Saatlik güncellenir', usdRate: '1 USD', tryCurrency: 'TL', estimatedPrice: 'Yaklaşık TL fiyatı'
   },
   en: {
+    selectNotes: 'Select notes', selectedNote: 'note selected', selectedNotes: 'notes selected',
     filter: 'Filter', filters: 'Filters', gender: 'Gender', searchNotes: 'Search notes', noNotes: 'No notes found', showResults: 'Show perfumes', activeFilters: 'Active filters', removeFilter: 'Remove filter', filterHelp: 'Choose more than one. Matches any selection within each group.', categoriesLabel: 'Perfume categories', perfumes: 'Perfumes', priceLow: 'Price: low to high', priceHigh: 'Price: high to low', showMatchingPerfumes: 'Show perfumes with this note',
     home: 'Arven home', menu: 'Main menu', discover: 'Discover', scentNotes: 'Scent notes', about: 'About Arven', favorites: 'Favorites', language: 'Language',
     journal: 'SCENT JOURNAL', heroFirst: 'Find a scent', heroEmphasis: 'that feels', heroLast: 'like you.', heroText: 'Discover perfumes, explore their notes and find the one that feels like you.', lucky: 'Discover a perfume',
@@ -20,6 +22,7 @@ export const translations = {
     rateLoading: 'Loading exchange rate', rateUnavailable: 'TRY conversion is unavailable', rateStale: 'Using the last available rate', rateUpdated: 'Rate updated', hourly: 'Updated hourly', usdRate: '1 USD', tryCurrency: 'TRY', estimatedPrice: 'Approximate TRY price'
   },
   ar: {
+    selectNotes: 'اختر النفحات', selectedNote: 'نفحة مختارة', selectedNotes: 'نفحات مختارة',
     filter: 'تصفية', filters: 'الفلاتر', gender: 'الفئة', searchNotes: 'ابحث في النفحات', noNotes: 'لم يتم العثور على نفحة', showResults: 'عرض العطور', activeFilters: 'الفلاتر المختارة', removeFilter: 'إزالة الفلتر', filterHelp: 'يمكنك اختيار أكثر من خيار. يكفي تطابق أحد الخيارات في كل مجموعة.', categoriesLabel: 'فئات العطور', perfumes: 'العطور', priceLow: 'السعر: من الأقل إلى الأعلى', priceHigh: 'السعر: من الأعلى إلى الأقل', showMatchingPerfumes: 'عرض العطور التي تحتوي على هذه النفحة',
     home: 'الصفحة الرئيسية لأرفين', menu: 'القائمة الرئيسية', discover: 'اكتشف', scentNotes: 'نفحات العطر', about: 'عن أرفين', favorites: 'المفضلة', language: 'اللغة',
     journal: 'يوميات العطر', heroFirst: 'اعثر على عطر', heroEmphasis: 'يترك أثراً', heroLast: 'يشبهك.', heroText: 'اكتشف العطور وتعرّف على نفحاتها واعثر على العطر الذي يشبهك.', lucky: 'اكتشف عطراً',

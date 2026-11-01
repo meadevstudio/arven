@@ -2,6 +2,7 @@ export const locales = { tr: 'tr-TR', en: 'en-US', ar: 'ar-SA' }
 
 export const translations = {
   tr: {
+    filter: 'Filtrele', filters: 'Filtreler', gender: 'Cinsiyet', searchNotes: 'Notalarda ara', noNotes: 'Nota bulunamadı', showResults: 'Parfümleri göster', activeFilters: 'Seçili filtreler', removeFilter: 'Filtreyi kaldır', filterHelp: 'Birden fazla seçim yapabilirsin. Her gruptaki seçimlerden birine uyması yeterlidir.', categoriesLabel: 'Parfüm kategorileri', perfumes: 'Parfümler', priceLow: 'Ucuzdan pahalıya', priceHigh: 'Pahalıdan ucuza', showMatchingPerfumes: 'Bu notaya sahip parfümleri göster',
     home: 'Arven ana sayfa', menu: 'Ana menü', discover: 'Keşfet', scentNotes: 'Koku notları', about: 'Arven hakkında', favorites: 'Favoriler', language: 'Dil seçimi',
     journal: 'KOKU GÜNLÜĞÜ', heroFirst: 'Kendine ait', heroEmphasis: 'bir iz', heroLast: 'bul.', heroText: 'Parfümleri keşfet, koku notalarını tanı ve sana en çok yakışanı bul.', lucky: 'Bir parfüm keşfet',
     library: 'PARFÜM KÜTÜPHANESİ', headingFirst: 'Bugün ne', headingEmphasis: 'hissetmek', headingLast: 'istersin?', intro: 'Koku ailelerine göre parfümleri keşfet, kendi imzanı bul.',
@@ -10,6 +11,7 @@ export const translations = {
     rateLoading: 'Kur yükleniyor', rateUnavailable: 'TL fiyatı için kur alınamadı', rateStale: 'Son alınan kur kullanılıyor', rateUpdated: 'Kur güncellemesi', hourly: 'Saatlik güncellenir', usdRate: '1 USD', tryCurrency: 'TL', estimatedPrice: 'Yaklaşık TL fiyatı'
   },
   en: {
+    filter: 'Filter', filters: 'Filters', gender: 'Gender', searchNotes: 'Search notes', noNotes: 'No notes found', showResults: 'Show perfumes', activeFilters: 'Active filters', removeFilter: 'Remove filter', filterHelp: 'Choose more than one. Matches any selection within each group.', categoriesLabel: 'Perfume categories', perfumes: 'Perfumes', priceLow: 'Price: low to high', priceHigh: 'Price: high to low', showMatchingPerfumes: 'Show perfumes with this note',
     home: 'Arven home', menu: 'Main menu', discover: 'Discover', scentNotes: 'Scent notes', about: 'About Arven', favorites: 'Favorites', language: 'Language',
     journal: 'SCENT JOURNAL', heroFirst: 'Find a scent', heroEmphasis: 'that feels', heroLast: 'like you.', heroText: 'Discover perfumes, explore their notes and find the one that feels like you.', lucky: 'Discover a perfume',
     library: 'PERFUME LIBRARY', headingFirst: 'How do you want', headingEmphasis: 'to feel', headingLast: 'today?', intro: 'Explore perfumes by scent family and find your signature.',
@@ -18,6 +20,7 @@ export const translations = {
     rateLoading: 'Loading exchange rate', rateUnavailable: 'TRY conversion is unavailable', rateStale: 'Using the last available rate', rateUpdated: 'Rate updated', hourly: 'Updated hourly', usdRate: '1 USD', tryCurrency: 'TRY', estimatedPrice: 'Approximate TRY price'
   },
   ar: {
+    filter: 'تصفية', filters: 'الفلاتر', gender: 'الفئة', searchNotes: 'ابحث في النفحات', noNotes: 'لم يتم العثور على نفحة', showResults: 'عرض العطور', activeFilters: 'الفلاتر المختارة', removeFilter: 'إزالة الفلتر', filterHelp: 'يمكنك اختيار أكثر من خيار. يكفي تطابق أحد الخيارات في كل مجموعة.', categoriesLabel: 'فئات العطور', perfumes: 'العطور', priceLow: 'السعر: من الأقل إلى الأعلى', priceHigh: 'السعر: من الأعلى إلى الأقل', showMatchingPerfumes: 'عرض العطور التي تحتوي على هذه النفحة',
     home: 'الصفحة الرئيسية لأرفين', menu: 'القائمة الرئيسية', discover: 'اكتشف', scentNotes: 'نفحات العطر', about: 'عن أرفين', favorites: 'المفضلة', language: 'اللغة',
     journal: 'يوميات العطر', heroFirst: 'اعثر على عطر', heroEmphasis: 'يترك أثراً', heroLast: 'يشبهك.', heroText: 'اكتشف العطور وتعرّف على نفحاتها واعثر على العطر الذي يشبهك.', lucky: 'اكتشف عطراً',
     library: 'مكتبة العطور', headingFirst: 'بماذا تريد', headingEmphasis: 'أن تشعر', headingLast: 'اليوم؟', intro: 'اكتشف عطرك المميز في مجموعتنا المرتبة حسب العائلات العطرية.',
@@ -28,6 +31,15 @@ export const translations = {
 }
 
 const noteTranslations = {
+  biberiye: ['rosemary', 'إكليل الجبل'],
+  'hindistan cevizi': ['coconut', 'جوز الهند'],
+  kahve: ['coffee', 'قهوة'],
+  kakule: ['cardamom', 'هيل'],
+  labdanum: ['labdanum', 'لابدانوم'],
+  muskat: ['nutmeg', 'جوزة الطيب'],
+  osmanthus: ['osmanthus', 'أوسمانثوس'],
+  sardunya: ['geranium', 'إبرة الراعي'],
+  vetiver: ['vetiver', 'نجيل الهند'],
   kestane: ['chestnut','كستناء'], vanilya: ['vanilla','فانيليا'], amber: ['amber','عنبر'], sedir: ['cedar','أرز'], çam: ['pine','صنوبر'], benzoin: ['benzoin','بنزوين'], 'koyu vanilya': ['dark vanilla','فانيليا داكنة'], erik: ['plum','برقوق'], kakao: ['cacao','كاكاو'], narenciye: ['citrus','حمضيات'], aldehit: ['aldehydes','ألدهيدات'], tonka: ['tonka bean','حبوب التونكا'], ananas: ['pineapple','أناناس'], bergamot: ['bergamot','برغموت'], huş: ['birch','بتولا'], misk: ['musk','مسك'], karabiber: ['black pepper','فلفل أسود'], paçuli: ['patchouli','باتشولي'], greyfurt: ['grapefruit','جريب فروت'], zencefil: ['ginger','زنجبيل'], tütün: ['tobacco','تبغ'], ambroxan: ['ambroxan','أمبروكسان'], biber: ['pepper','فلفل'], lavanta: ['lavender','لافندر'], iris: ['iris','سوسن'], deri: ['leather','جلد'], tütsü: ['incense','بخور'], olibanum: ['frankincense','لبان'], elma: ['apple','تفاح'], reçine: ['resin','راتنج'], bal: ['honey','عسل'], 'deniz yosunu': ['seaweed','طحالب بحرية'], tuz: ['salt','ملح'], ambergris: ['ambergris','عنبر بحري'], ahududu: ['raspberry','توت العليق'], yasemin: ['jasmine','ياسمين'], davana: ['davana','دافانا'], 'deniz notası': ['marine notes','نفحات بحرية'], 'menekşe yaprağı': ['violet leaf','أوراق البنفسج'], neroli: ['neroli','نيرولي'], sandal: ['sandalwood','خشب الصندل'], oud: ['oud','عود'], baharat: ['spices','توابل'], çiçek: ['floral notes','نفحات زهرية'], çilek: ['strawberry','فراولة'], limon: ['lemon','ليمون'], mirabelle: ['mirabelle plum','برقوق ميرابيل'], frezya: ['freesia','فريزيا'], 'meşe yosunu': ['oakmoss','طحلب البلوط'], portakal: ['orange','برتقال'], gül: ['rose','ورد'], şeftali: ['peach','خوخ'], 'ylang-ylang': ['ylang-ylang','يلانغ يلانغ'], magnolya: ['magnolia','ماغنوليا'], 'yeşil notalar': ['green notes','نفحات خضراء'], armut: ['pear','كمثرى'], badem: ['almond','لوز'], mandalina: ['mandarin','يوسفي'], 'portakal çiçeği': ['orange blossom','زهر البرتقال'], safran: ['saffron','زعفران'], amberwood: ['amberwood','أخشاب عنبرية'], cannabis: ['cannabis accord','نفحة القنب'], 'odunsu notalar': ['woody notes','نفحات خشبية'], incir: ['fig','تين'], tuberose: ['tuberose','مسك الروم'], hibiskus: ['hibiscus','كركديه'], çay: ['tea','شاي'], 'siyah frenk üzümü': ['blackcurrant','كشمش أسود'], turunç: ['bitter orange','نارنج'], odun: ['woods','أخشاب'], tarçın: ['cinnamon','قرفة'], hurma: ['dates','تمر'], pralin: ['praline','برالين'], menekşe: ['violet','بنفسج'], 'mineral notalar': ['mineral notes','نفحات معدنية'], 'ten notası': ['skin accord','نفحة بشرة'], passionfruit: ['passion fruit','فاكهة الباشن'], meyveler: ['fruits','فواكه'], rom: ['rum','روم'], trüf: ['truffle','كمأة'], orkide: ['orchid','أوركيد'], 'bitter badem': ['bitter almond','لوز مر'], nane: ['mint','نعناع'], verbena: ['verbena','لويزة'], pudra: ['powdery notes','نفحات بودرية'], meyve: ['fruit','فاكهة']
 }
 
@@ -114,6 +126,7 @@ export function localizePerfume(perfume, language) {
   const family = familyTranslations[perfume.family]
   const translated = {
     ...perfume,
+    noteKeys: perfume.notes,
     family: language === 'en' ? perfume.family : family?.[language === 'ar' ? 1 : 0] || perfume.family,
     description: language === 'tr' ? perfume.description : descriptions[perfume.name]?.[language === 'ar' ? 1 : 0] || perfume.description,
     notes: language === 'tr' ? perfume.notes : perfume.notes.map(note => noteTranslations[note]?.[language === 'ar' ? 1 : 0] || note),

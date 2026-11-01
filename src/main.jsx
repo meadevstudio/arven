@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import { createRoot } from 'react-dom/client'
 import { categories, perfumes } from './data.js'
 import { locales, localizePerfume, translations } from './i18n.js'
+import { filterPerfumes, normalizeSearch } from './catalog.js'
 import './styles.css'
 
 const Icon = ({ name, size = 18, strokeWidth = 1.8 }) => {
@@ -13,7 +14,8 @@ const Icon = ({ name, size = 18, strokeWidth = 1.8 }) => {
     close: <><path d="m6 6 12 12"/><path d="m18 6-12 12"/></>,
     chevron: <path d="m6 9 6 6 6-6"/>,
     grid: <><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></>,
-    bookmark: <path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-6-3-6 3Z"/>
+    bookmark: <path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-6-3-6 3Z"/>,
+    filter: <><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="currentColor" stroke="none"/><circle cx="15" cy="17" r="3" fill="currentColor" stroke="none"/></>
   }
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>
 }
@@ -140,7 +142,7 @@ function useExchangeRate() {
   return { rate: savedRate?.rate ?? null, status, updatedAt: savedRate?.updatedAt, source: savedRate?.source, rateDate: savedRate?.rateDate }
 }
 
-function PerfumeName({ name, as: Heading = 'h3' }) {
+function PerfumeName({ name, as: Heading = 'h3', className = '', children }) {
   const headingRef = useRef(null)
   const textRef = useRef(null)
   useLayoutEffect(() => {
@@ -182,7 +184,7 @@ function PerfumeName({ name, as: Heading = 'h3' }) {
       document.fonts.removeEventListener('loadingdone', scheduleFit)
     }
   }, [name])
-  return <Heading ref={headingRef} className="perfume-name" dir="auto" title={name}><span ref={textRef}>{name}</span></Heading>
+  return <Heading ref={headingRef} className={`perfume-name ${className}`} dir="auto" title={name}><span ref={textRef}>{children || name}</span></Heading>
 }
 
 function App() {
@@ -194,13 +196,17 @@ function App() {
   })
   const t = translations[lang]
   const locale = locales[lang]
-  const [category, setCategory] = useState('Tümü')
+  const [genders, setGenders] = useState([])
+  const [selectedNotes, setSelectedNotes] = useState([])
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [noteSearch, setNoteSearch] = useState('')
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState('featured')
   const [selected, setSelected] = useState(null)
   const [favorites, toggleFavorite] = useFavorites()
   const [showFavorites, setShowFavorites] = useState(false)
   const modalTriggerRef = useRef(null)
+  const showNoteResultsRef = useRef(false)
   const exchangeRate = useExchangeRate()
   const usdTry = exchangeRate.rate
   const rateStatus = exchangeRate.status
@@ -216,19 +222,58 @@ function App() {
   }, [lang])
 
   const localizedPerfumes = useMemo(() => perfumes.map(p => localizePerfume(p, lang)), [lang])
-
-  const filtered = useMemo(() => {
-    const normalize = value => value.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/ı/g, 'i')
-    const needle = normalize(query).trim()
-    let result = localizedPerfumes.filter(p => {
-      const matchesCategory = category === 'Tümü' || p.gender === category
-      const matchesQuery = !needle || normalize([p.name, p.family, ...p.notes].join(' ')).includes(needle)
-      const matchesFavorites = !showFavorites || favorites.includes(p.id)
-      return matchesCategory && matchesQuery && matchesFavorites
+  const noteOptions = useMemo(() => {
+    const options = new Map()
+    localizedPerfumes.forEach(perfume => perfume.noteKeys.forEach((key, index) => {
+      const current = options.get(key)
+      if (current) current.count += 1
+      else options.set(key, { key, label: perfume.notes[index], count: 1 })
+    }))
+    return [...options.values()].sort((a, b) => a.label.localeCompare(b.label, locale))
+  }, [localizedPerfumes, locale])
+  const noteLabels = useMemo(() => new Map(noteOptions.map(note => [note.key, note.label])), [noteOptions])
+  const visibleNoteOptions = noteOptions.filter(note => normalizeSearch(note.label).includes(normalizeSearch(noteSearch).trim()))
+  const filtered = useMemo(() => filterPerfumes(localizedPerfumes, {
+    genders, notes: selectedNotes, query, favorites, onlyFavorites: showFavorites, sort, locale
+  }), [genders, selectedNotes, query, sort, showFavorites, favorites, localizedPerfumes, locale])
+  const filterCount = genders.length + selectedNotes.length
+  const toggleGender = key => setGenders(current => current.includes(key) ? current.filter(value => value !== key) : [...current, key])
+  const toggleNote = key => setSelectedNotes(current => current.includes(key) ? current.filter(value => value !== key) : [...current, key])
+  const clearFilters = () => {
+    setGenders([])
+    setSelectedNotes([])
+    setQuery('')
+    setShowFavorites(false)
+    setNoteSearch('')
+  }
+  const showFilteredResults = () => {
+    setFilterOpen(false)
+    requestAnimationFrame(() => {
+      const results = document.getElementById('catalog-results')
+      results?.scrollIntoView({ behavior: 'instant', block: 'start' })
+      results?.focus({ preventScroll: true })
     })
-    if (sort === 'name') result = [...result].sort((a,b) => a.name.localeCompare(b.name, locale))
-    return result
-  }, [category, query, sort, showFavorites, favorites, localizedPerfumes, locale])
+  }
+  const openNoteResults = key => {
+    setGenders([])
+    setSelectedNotes([key])
+    setQuery('')
+    setShowFavorites(false)
+    setFilterOpen(false)
+    modalTriggerRef.current = document.getElementById('catalog-results')
+    showNoteResultsRef.current = true
+    setSelected(null)
+  }
+  useEffect(() => {
+    if (selected !== null || !showNoteResultsRef.current) return
+    showNoteResultsRef.current = false
+    const frame = requestAnimationFrame(() => {
+      const results = document.getElementById('catalog-results')
+      results?.scrollIntoView({ behavior: 'instant', block: 'start' })
+      results?.focus({ preventScroll: true })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [selected])
 
   const openPerfume = id => {
     modalTriggerRef.current = document.activeElement
@@ -236,18 +281,7 @@ function App() {
   }
   const randomPick = () => openPerfume(perfumes[Math.floor(Math.random() * perfumes.length)].id)
   const selectedPerfume = localizedPerfumes.find(p => p.id === selected)
-  const toggleFavoriteFilter = () => {
-    const next = !showFavorites
-    setShowFavorites(next)
-    if (next) {
-      setCategory('Tümü')
-      setQuery('')
-    }
-    document.getElementById('notlar')?.scrollIntoView({
-      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
-      block: 'start'
-    })
-  }
+  const toggleFavoriteFilter = () => setShowFavorites(current => !current)
 
   return <div className="app-shell">
     <header className="topbar" inert={Boolean(selectedPerfume)}>
@@ -255,7 +289,6 @@ function App() {
         <a className="brand" href="#top" aria-label={t.home}><span className="brand-mark">A</span><span>ARVEN</span></a>
         <nav className="main-nav" aria-label={t.menu}><a href="#kesif">{t.discover}</a><a href="#notlar">{t.scentNotes}</a><a href="#hakkinda">{t.about}</a></nav>
         <div className="top-actions">
-          <button className={`icon-button ${showFavorites ? 'selected' : ''}`} onClick={toggleFavoriteFilter} aria-label={t.favorites} aria-pressed={showFavorites}><Icon name="heart"/><span className="favorite-count">{favorites.length || ''}</span></button>
           <div className="language-flags" role="group" aria-label={t.language} dir="ltr">
             {languages.map(language => <button key={language.code} type="button" className={`language-button ${lang === language.code ? 'active' : ''}`} onClick={() => setLang(language.code)} aria-label={language.label} title={language.label} aria-pressed={lang === language.code}><Flag language={language.code}/></button>)}
           </div>
@@ -265,20 +298,42 @@ function App() {
 
     <main id="top" inert={Boolean(selectedPerfume)}>
       <section className="hero" id="kesif">
-        <div className="hero-copy"><p className="eyebrow"><span className="eyebrow-line"/> {t.journal}</p><h1>{t.heroFirst}<br/><em>{t.heroEmphasis}</em> {t.heroLast}</h1><p className="hero-text">{t.heroText}</p><button className="primary-button" onClick={randomPick}>{t.lucky} <Icon name="spark" size={17}/></button></div>
+        <div className="hero-copy"><p className="eyebrow"><span className="eyebrow-line"/> {t.journal}</p><PerfumeName as="h1" className="hero-heading" name={`${t.heroFirst} ${t.heroEmphasis} ${t.heroLast}`}>{t.heroFirst} <em>{t.heroEmphasis}</em> {t.heroLast}</PerfumeName><p className="hero-text">{t.heroText}</p><button className="primary-button" onClick={randomPick}>{t.lucky} <Icon name="spark" size={17}/></button></div>
         <div className="hero-art" aria-hidden="true"><div className="halo halo-one"/><div className="halo halo-two"/><div className="hero-bottle"><div className="hero-cap"/><div className="hero-glass"><span>ARVEN</span><small>EAU DE PARFUM</small><b>01</b></div></div></div>
       </section>
 
       <section className="catalog-section" id="notlar">
-        <div className="section-heading"><div><p className="eyebrow">{t.library}</p><h2>{t.headingFirst} <em>{t.headingEmphasis}</em> {t.headingLast}</h2></div><p className="section-intro">{t.intro}</p></div>
-        <div className="controls"><div className="category-tabs" role="group" aria-label={t.library}>{categories.map(c => <button key={c.key} type="button" className={category === c.key ? 'active' : ''} onClick={() => {setCategory(c.key); setShowFavorites(false)}} aria-pressed={category === c.key}>{t.categories[c.key]}<span>{c.count}</span></button>)}</div><div className="filter-row"><label className="search-box"><Icon name="search" size={17}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder={t.search} aria-label={t.search}/></label><label className="sort-box"><span>{t.sort}</span><select value={sort} onChange={e => setSort(e.target.value)} aria-label={t.sort}><option value="featured">{t.featured}</option><option value="name">{t.nameSort}</option></select><Icon name="chevron" size={15}/></label></div></div>
-        <div className="result-meta"><span>{showFavorites ? t.favoriteCollection : t.categories[category]} <strong>{filtered.length}</strong></span><span className="rate-info" title={rateTitle} aria-live="polite">{usdTry ? <bdi dir="ltr">{`${t.usdRate} = ${usdTry.toFixed(2)} ${t.tryCurrency}`}</bdi> : rateStatus === 'loading' ? t.rateLoading : t.rateUnavailable}<small>{rateStatus === 'stale' ? t.rateStale : usdTry ? t.hourly : ''}</small></span>{(query || showFavorites) && <button className="clear-button" onClick={() => {setCategory('Tümü');setQuery('');setShowFavorites(false)}}>{t.clear}</button>}</div>
-        {filtered.length > 0 ? <div className="perfume-grid">{filtered.map((p, i) => <PerfumeCard key={p.id} perfume={p} index={i} favorite={favorites.includes(p.id)} onFavorite={() => toggleFavorite(p.id)} onOpen={() => openPerfume(p.id)} t={t} usdTry={usdTry} rateStatus={rateStatus}/>)}</div> : <div className="empty-state"><span className="empty-icon"><Icon name="search" size={25}/></span><h3>{t.noResults}</h3><p>{t.noResultsText}</p><button className="text-button" onClick={() => {setCategory('Tümü');setQuery('');setShowFavorites(false)}}>{t.showAll} <Icon name="arrow" size={16}/></button></div>}
+        <div className="controls">
+          <div className="category-tabs" role="group" aria-label={t.categoriesLabel}>
+            {categories.map(c => {
+              const active = c.key === 'Tümü' ? !genders.length && !showFavorites : genders.includes(c.key)
+              return <button key={c.key} type="button" className={active ? 'active' : ''} onClick={() => {
+                if (c.key === 'Tümü') clearFilters()
+                else { setGenders([c.key]); setShowFavorites(false) }
+              }} aria-pressed={active}>{t.categories[c.key]}<span>{c.count}</span></button>
+            })}
+            <button type="button" className={`favorites-tab ${showFavorites ? 'active' : ''}`} onClick={toggleFavoriteFilter} aria-pressed={showFavorites}><Icon name="heart" size={15}/>{t.favorites}<span>{favorites.length}</span></button>
+          </div>
+          <div className="filter-row">
+            <label className="search-box"><Icon name="search" size={17}/><input value={query} onChange={e => setQuery(e.target.value)} placeholder={t.search} aria-label={t.search}/></label>
+            <button type="button" className={`filter-toggle ${filterOpen ? 'active' : ''}`} onClick={() => setFilterOpen(current => !current)} aria-expanded={filterOpen} aria-controls="perfume-filters"><Icon name="filter" size={17}/>{t.filter}{filterCount > 0 && <span className="filter-count">{filterCount}</span>}</button>
+            <label className="sort-box"><span>{t.sort}</span><select value={sort} onChange={e => setSort(e.target.value)} aria-label={t.sort}><option value="featured">{t.featured}</option><option value="name">{t.nameSort}</option><option value="price-asc">{t.priceLow}</option><option value="price-desc">{t.priceHigh}</option></select><Icon name="chevron" size={15}/></label>
+          </div>
+        </div>
+        {filterOpen && <section className="filter-panel" id="perfume-filters" aria-label={t.filters}>
+          <div className="filter-panel-heading"><div><h2>{t.filters}</h2><p>{t.filterHelp}</p></div><button type="button" className="clear-button" onClick={clearFilters}>{t.clear}</button></div>
+          <fieldset className="filter-group"><legend>{t.gender}</legend><div className="filter-options gender-options">{categories.filter(c => c.key !== 'Tümü').map(c => <label key={c.key} className="filter-option"><input type="checkbox" checked={genders.includes(c.key)} onChange={() => toggleGender(c.key)}/><span>{t.categories[c.key]}</span><small>{c.count}</small></label>)}</div></fieldset>
+          <fieldset className="filter-group"><legend>{t.notes}</legend><label className="filter-note-search"><Icon name="search" size={15}/><input type="search" value={noteSearch} onChange={e => setNoteSearch(e.target.value)} placeholder={t.searchNotes} aria-label={t.searchNotes}/></label><div className="filter-options note-options">{visibleNoteOptions.map(note => <label key={note.key} className="filter-option"><input type="checkbox" checked={selectedNotes.includes(note.key)} onChange={() => toggleNote(note.key)}/><span>{note.label}</span><small>{note.count}</small></label>)}{!visibleNoteOptions.length && <p className="filter-empty">{t.noNotes}</p>}</div></fieldset>
+          <button type="button" className="primary-button filter-done" onClick={showFilteredResults}>{t.showResults} <span>{filtered.length}</span><Icon name="arrow" size={16}/></button>
+        </section>}
+        {filterCount > 0 && <div className="active-filters" aria-label={t.activeFilters}>{genders.map(gender => <button key={gender} type="button" className="filter-chip" onClick={() => toggleGender(gender)} aria-label={`${t.removeFilter}: ${t.categories[gender]}`}>{t.categories[gender]}<Icon name="close" size={12}/></button>)}{selectedNotes.map(key => <button key={key} type="button" className="filter-chip" onClick={() => toggleNote(key)} aria-label={`${t.removeFilter}: ${noteLabels.get(key)}`}>{noteLabels.get(key)}<Icon name="close" size={12}/></button>)}</div>}
+        <div className="result-meta" id="catalog-results" tabIndex={-1}><span aria-live="polite">{showFavorites ? t.favoriteCollection : t.perfumes} <strong>{filtered.length}</strong></span><span className="rate-info" title={rateTitle} aria-live="polite">{usdTry ? <bdi dir="ltr">{`${t.usdRate} = ${usdTry.toFixed(2)} ${t.tryCurrency}`}</bdi> : rateStatus === 'loading' ? t.rateLoading : t.rateUnavailable}<small>{rateStatus === 'stale' ? t.rateStale : usdTry ? t.hourly : ''}</small></span>{(query || showFavorites || filterCount > 0) && <button className="clear-button" onClick={clearFilters}>{t.clear}</button>}</div>
+        {filtered.length > 0 ? <div className="perfume-grid">{filtered.map((p, i) => <PerfumeCard key={p.id} perfume={p} index={i} favorite={favorites.includes(p.id)} onFavorite={() => toggleFavorite(p.id)} onOpen={() => openPerfume(p.id)} t={t} usdTry={usdTry} rateStatus={rateStatus}/>)}</div> : <div className="empty-state"><span className="empty-icon"><Icon name="search" size={25}/></span><h3>{t.noResults}</h3><p>{t.noResultsText}</p><button className="text-button" onClick={clearFilters}>{t.showAll} <Icon name="arrow" size={16}/></button></div>}
       </section>
     </main>
 
     <footer id="hakkinda" inert={Boolean(selectedPerfume)}><div className="footer-brand"><span className="brand-mark">A</span><div><strong>ARVEN</strong><p>{t.tagline}</p></div></div><p>{t.footerText}</p><span className="footer-copy" dir="ltr">© {new Date().getFullYear()} Arven</span></footer>
-    {selectedPerfume && <DetailModal perfume={selectedPerfume} favorite={favorites.includes(selectedPerfume.id)} onFavorite={() => toggleFavorite(selectedPerfume.id)} onClose={() => setSelected(null)} triggerRef={modalTriggerRef} t={t} usdTry={usdTry} rateStatus={rateStatus}/>} 
+    {selectedPerfume && <DetailModal perfume={selectedPerfume} favorite={favorites.includes(selectedPerfume.id)} onFavorite={() => toggleFavorite(selectedPerfume.id)} onNote={openNoteResults} onClose={() => setSelected(null)} triggerRef={modalTriggerRef} t={t} usdTry={usdTry} rateStatus={rateStatus}/>} 
   </div>
 }
 
@@ -306,7 +361,7 @@ function PerfumeCard({ perfume, index, favorite, onFavorite, onOpen, t, usdTry, 
   </article>
 }
 
-function DetailModal({ perfume, favorite, onFavorite, onClose, triggerRef, t, usdTry, rateStatus }) {
+function DetailModal({ perfume, favorite, onFavorite, onNote, onClose, triggerRef, t, usdTry, rateStatus }) {
   const modalRef = useRef(null)
   const closeRef = useRef(onClose)
 
@@ -356,13 +411,13 @@ function DetailModal({ perfume, favorite, onFavorite, onClose, triggerRef, t, us
       Object.assign(body.style, previousStyle)
       window.scrollTo({ top: scrollY, behavior: 'instant' })
       requestAnimationFrame(() => {
-        const target = triggerRef.current?.isConnected ? triggerRef.current : document.querySelector('.top-actions .icon-button')
+        const target = triggerRef.current?.isConnected ? triggerRef.current : document.querySelector('.favorites-tab')
         target?.focus({ preventScroll: true })
       })
     }
   }, [triggerRef])
 
-  return <div className="modal-backdrop" onClick={event => event.target === event.currentTarget && onClose()}><div ref={modalRef} className="detail-modal" role="dialog" aria-modal="true" aria-label={perfume.name} aria-describedby={`perfume-description-${perfume.id}`} tabIndex={-1}><button className="modal-close" type="button" onClick={onClose} aria-label={t.close}><Icon name="close"/></button><div className="modal-image"><img src={perfume.image} alt=""/></div><div className="modal-content"><p className="eyebrow">{perfume.genderLabel} / {perfume.family}</p><PerfumeName name={perfume.name} as="h2"/><Price perfume={perfume} usdTry={usdTry} t={t} rateStatus={rateStatus} className="detail-price"/><p className="modal-description" id={`perfume-description-${perfume.id}`}>{perfume.description}</p><div className="detail-stats"><div><small>{t.sillage}</small><strong>{perfume.sillage}</strong></div></div><div className="notes-block"><small>{t.notes}</small><div>{perfume.notes.map(note => <span key={note}>{note}</span>)}</div></div><button className={`save-button ${favorite ? 'saved' : ''}`} type="button" onClick={onFavorite} aria-pressed={favorite}><Icon name={favorite ? 'bookmark' : 'heart'} size={17}/>{favorite ? t.saved : t.addFavorite}</button></div></div></div>
+  return <div className="modal-backdrop" onClick={event => event.target === event.currentTarget && onClose()}><div ref={modalRef} className="detail-modal" role="dialog" aria-modal="true" aria-label={perfume.name} aria-describedby={`perfume-description-${perfume.id}`} tabIndex={-1}><button className="modal-close" type="button" onClick={onClose} aria-label={t.close}><Icon name="close"/></button><div className="modal-image"><img src={perfume.image} alt=""/></div><div className="modal-content"><p className="eyebrow">{perfume.genderLabel} / {perfume.family}</p><PerfumeName name={perfume.name} as="h2"/><Price perfume={perfume} usdTry={usdTry} t={t} rateStatus={rateStatus} className="detail-price"/><p className="modal-description" id={`perfume-description-${perfume.id}`}>{perfume.description}</p><div className="detail-stats"><div><small>{t.sillage}</small><strong>{perfume.sillage}</strong></div></div><div className="notes-block"><small>{t.notes}</small><div>{perfume.notes.map((note, index) => <button key={perfume.noteKeys[index]} type="button" className="note-chip" onClick={() => onNote(perfume.noteKeys[index])} aria-label={`${note} — ${t.showMatchingPerfumes}`}>{note}</button>)}</div></div><button className={`save-button ${favorite ? 'saved' : ''}`} type="button" onClick={onFavorite} aria-pressed={favorite}><Icon name={favorite ? 'bookmark' : 'heart'} size={17}/>{favorite ? t.saved : t.addFavorite}</button></div></div></div>
 }
 
 createRoot(document.getElementById('root')).render(<App />)

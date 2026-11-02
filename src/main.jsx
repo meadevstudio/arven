@@ -4,6 +4,10 @@ import { categories, perfumes } from './data.js'
 import { locales, localizePerfume, translations } from './i18n.js'
 import { filterPerfumes } from './catalog.js'
 import NoteMultiSelect from './NoteMultiSelect.jsx'
+import PerfumeQuiz, { emptyQuizAnswers } from './PerfumeQuiz.jsx'
+import { quizTranslations } from './quiz-i18n.js'
+import { recommendPerfumes } from './recommendations.js'
+import { perfumeProfiles } from './perfume-profiles.js'
 import './styles.css'
 
 const Icon = ({ name, size = 18, strokeWidth = 1.8 }) => {
@@ -203,10 +207,14 @@ function App() {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState('featured')
   const [selected, setSelected] = useState(null)
+  const [quizOpen, setQuizOpen] = useState(false)
+  const [quizAnswers, setQuizAnswers] = useState(null)
+  const [quizDraft, setQuizDraft] = useState(emptyQuizAnswers)
   const [favorites, toggleFavorite] = useFavorites()
   const [showFavorites, setShowFavorites] = useState(false)
   const modalTriggerRef = useRef(null)
   const showNoteResultsRef = useRef(false)
+  const quizResultsRef = useRef(null)
   const exchangeRate = useExchangeRate()
   const usdTry = exchangeRate.rate
   const rateStatus = exchangeRate.status
@@ -277,12 +285,35 @@ function App() {
     modalTriggerRef.current = document.activeElement
     setSelected(id)
   }
-  const randomPick = () => openPerfume(perfumes[Math.floor(Math.random() * perfumes.length)].id)
+  const openQuiz = () => {
+    setQuizOpen(true)
+  }
+  const quizText = quizTranslations[lang]
+  const recommendations = useMemo(() => {
+    if (!quizAnswers) return []
+    const contexts = {
+      any: { time: 'any', occasion: 'any' },
+      daily: { time: 'day', occasion: 'daily' },
+      office: { time: 'day', occasion: 'office' },
+      evening: { time: 'evening', occasion: 'any' },
+      special: { time: 'any', occasion: 'special' }
+    }
+    return recommendPerfumes(localizedPerfumes, { ...quizAnswers, ...contexts[quizAnswers.context] })
+  }, [localizedPerfumes, quizAnswers])
+  useEffect(() => {
+    if (!quizAnswers) return
+    const frame = requestAnimationFrame(() => {
+      quizResultsRef.current?.scrollIntoView({ behavior: 'instant', block: 'start' })
+      quizResultsRef.current?.focus({ preventScroll: true })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [quizAnswers])
   const selectedPerfume = localizedPerfumes.find(p => p.id === selected)
+  const dialogOpen = Boolean(selectedPerfume) || quizOpen
   const toggleFavoriteFilter = () => setShowFavorites(current => !current)
 
   return <div className="app-shell">
-    <header className="topbar" inert={Boolean(selectedPerfume)}>
+    <header className="topbar" inert={dialogOpen}>
       <div className="topbar-inner">
         <a className="brand" href="#top" aria-label={t.home}><span className="brand-mark">A</span><span>ARVEN</span></a>
         <nav className="main-nav" aria-label={t.menu}><a href="#kesif">{t.discover}</a><a href="#notlar">{t.scentNotes}</a><a href="#hakkinda">{t.about}</a></nav>
@@ -294,11 +325,20 @@ function App() {
       </div>
     </header>
 
-    <main id="top" inert={Boolean(selectedPerfume)}>
+    <main id="top" inert={dialogOpen}>
       <section className="hero" id="kesif">
-        <div className="hero-copy"><p className="eyebrow"><span className="eyebrow-line"/> {t.journal}</p><PerfumeName as="h1" className="hero-heading" name={`${t.heroFirst} ${t.heroEmphasis} ${t.heroLast}`}>{t.heroFirst} <em>{t.heroEmphasis}</em> {t.heroLast}</PerfumeName><p className="hero-text">{t.heroText}</p><button className="primary-button" onClick={randomPick}>{t.lucky} <Icon name="spark" size={17}/></button></div>
+        <div className="hero-copy"><p className="eyebrow"><span className="eyebrow-line"/> {t.journal}</p><PerfumeName as="h1" className="hero-heading" name={`${t.heroFirst} ${t.heroEmphasis} ${t.heroLast}`}>{t.heroFirst} <em>{t.heroEmphasis}</em> {t.heroLast}</PerfumeName><p className="hero-text">{t.heroText}</p><button type="button" className="primary-button" onClick={openQuiz} aria-haspopup="dialog">{quizText.title} <Icon name="spark" size={17}/></button></div>
         <div className="hero-art" aria-hidden="true"><div className="halo halo-one"/><div className="halo halo-two"/><div className="hero-bottle"><div className="hero-cap"/><div className="hero-glass"><span>ARVEN</span><small>EAU DE PARFUM</small><b>01</b></div></div></div>
       </section>
+
+      {quizAnswers && <section className="quiz-results" ref={quizResultsRef} id="quiz-results" tabIndex={-1} aria-labelledby="quiz-results-title">
+        <div className="quiz-results-heading"><div><p className="eyebrow">ARVEN / {quizText.title}</p><h2 id="quiz-results-title">{quizText.resultsTitle}</h2><p>{quizText.resultsIntro}</p></div><div className="quiz-results-actions"><button type="button" onClick={openQuiz}>{quizText.edit}</button><button type="button" onClick={() => { setQuizAnswers(null); document.querySelector('.hero .primary-button')?.focus({ preventScroll: true }) }}>{quizText.hideResults}</button></div></div>
+        {recommendations.length > 0 ? <div className="perfume-grid">{recommendations.map(({ perfume, reasons }, index) => <div className="quiz-result-item" key={perfume.id}>
+          <PerfumeCard perfume={perfume} index={index} favorite={favorites.includes(perfume.id)} onFavorite={() => toggleFavorite(perfume.id)} onOpen={() => openPerfume(perfume.id)} t={t} usdTry={usdTry} rateStatus={rateStatus}/>
+          <div className="quiz-reasons"><small>{reasons.length ? quizText.matchLabel : quizText.styleLabel}</small><ul>{(reasons.length ? reasons : perfumeProfiles[perfume.name].styles.slice(0,2).map(value => ({ type: 'style', value }))).map(reason => <li key={`${reason.type}-${reason.value}`} title={quizText.reasonLabels[reason.type]}>{({ style: quizText.styles, season: quizText.seasons, time: quizText.times, occasion: quizText.occasions })[reason.type][reason.value]}</li>)}</ul>{perfumeProfiles[perfume.name].confidence === 'limited' && <p className="quiz-limited">{quizText.limitedNote}</p>}</div>
+        </div>)}</div> : <div className="empty-state"><h3>{quizText.noResults}</h3><p>{quizText.noResultsHelp}</p><button className="primary-button" type="button" onClick={openQuiz}>{quizText.edit}</button></div>}
+        <p className="quiz-result-note">{quizText.recommendationNote}</p>
+      </section>}
 
       <section className="catalog-section" id="notlar">
         <div className="controls">
@@ -330,7 +370,8 @@ function App() {
       </section>
     </main>
 
-    <footer id="hakkinda" inert={Boolean(selectedPerfume)}><div className="footer-brand"><span className="brand-mark">A</span><div><strong>ARVEN</strong><p>{t.tagline}</p></div></div><p>{t.footerText}</p><span className="footer-copy" dir="ltr">© {new Date().getFullYear()} Arven</span></footer>
+    <footer id="hakkinda" inert={dialogOpen}><div className="footer-brand"><span className="brand-mark">A</span><div><strong>ARVEN</strong><p>{t.tagline}</p></div></div><p>{t.footerText}</p><span className="footer-copy" dir="ltr">© {new Date().getFullYear()} Arven</span></footer>
+    {quizOpen && <PerfumeQuiz lang={lang} initialAnswers={quizDraft} onClose={answers => { setQuizDraft(answers); setQuizOpen(false) }} onComplete={answers => { setQuizDraft(answers); setQuizAnswers(answers); setQuizOpen(false) }}/>} 
     {selectedPerfume && <DetailModal perfume={selectedPerfume} favorite={favorites.includes(selectedPerfume.id)} onFavorite={() => toggleFavorite(selectedPerfume.id)} onNote={openNoteResults} onClose={() => setSelected(null)} triggerRef={modalTriggerRef} t={t} usdTry={usdTry} rateStatus={rateStatus}/>} 
   </div>
 }

@@ -1,0 +1,90 @@
+export const PROFILE_OPTIONS = {
+  seasons: ['spring', 'summer', 'autumn', 'winter'],
+  times: ['day', 'evening'],
+  occasions: ['daily', 'office', 'special'],
+  styles: ['fresh', 'sweet', 'floral', 'woody', 'dark', 'fruity']
+}
+
+// Editorial wearing suggestions inferred from the catalogue's scent notes and
+// descriptions. These are flexible recommendations, not measured performance,
+// user ratings, or restrictions on when a perfume may be worn. Limited entries
+// use only the existing catalogue description; they do not resolve an unclear
+// product identity or imply knowledge of a private blend's formula.
+const profile = (seasons, times, occasions, styles, confidence = 'editorial') => ({
+  seasons, times, occasions, styles, confidence
+})
+
+export const perfumeProfiles = {
+  'Armani Stronger With You Intense': profile(['autumn', 'winter'], ['evening'], ['daily', 'special'], ['sweet', 'woody']),
+  'Burberry Hero': profile(['spring', 'autumn', 'winter'], ['day', 'evening'], ['daily', 'office'], ['woody', 'fresh']),
+  'Byredo Vanille Antique': profile(['autumn', 'winter'], ['evening'], ['special'], ['sweet', 'dark', 'woody']),
+  'Bad Boy Gold Fantasy': profile(['autumn', 'winter'], ['evening'], ['special'], ['sweet', 'woody']),
+  'Chanel Allure Homme Sport': profile(['spring', 'summer', 'autumn', 'winter'], ['day'], ['daily', 'office'], ['fresh', 'woody']),
+  'Creed Aventus': profile(['spring', 'summer', 'autumn', 'winter'], ['day', 'evening'], ['office', 'special'], ['fruity', 'woody', 'fresh']),
+  'Creed Aventus Absolu': profile(['autumn', 'winter'], ['evening'], ['special'], ['woody', 'dark', 'fresh']),
+  'D&G The One For Men': profile(['autumn', 'winter'], ['evening'], ['special'], ['sweet', 'woody', 'dark']),
+  'Dior Sauvage': profile(['spring', 'summer', 'autumn', 'winter'], ['day', 'evening'], ['daily', 'office', 'special'], ['fresh', 'woody']),
+  'Gucci Guilty Elixir': profile(['spring', 'autumn', 'winter'], ['evening'], ['special'], ['sweet', 'floral', 'woody']),
+  'Hugo Boss Absolu': profile(['autumn', 'winter'], ['evening'], ['special'], ['dark', 'woody']),
+  'Hugo Boss Bottled Elixir': profile(['autumn', 'winter'], ['evening'], ['special'], ['dark', 'woody']),
+  'Lacoste Red': profile(['spring', 'summer', 'autumn'], ['day'], ['daily'], ['fresh', 'fruity', 'woody']),
+  'Le Male Elixir': profile(['autumn', 'winter'], ['evening'], ['special'], ['sweet', 'dark']),
+  'Megamare': profile(['spring', 'summer'], ['day'], ['daily', 'special'], ['fresh', 'woody']),
+  'Ombre Leather': profile(['autumn', 'winter'], ['evening'], ['special'], ['dark', 'floral', 'woody']),
+  'One Million Elixir': profile(['autumn', 'winter'], ['evening'], ['special'], ['sweet', 'fruity', 'woody']),
+  'Invictus Aqua': profile(['spring', 'summer'], ['day'], ['daily'], ['fresh', 'woody']),
+  'Reflection Man': profile(['spring', 'summer', 'autumn'], ['day', 'evening'], ['office', 'special'], ['floral', 'woody', 'fresh']),
+  'Versace Dylan Blue': profile(['spring', 'summer', 'autumn'], ['day', 'evening'], ['daily', 'office'], ['fresh', 'woody']),
+  'Versace Oud Noir': profile(['autumn', 'winter'], ['evening'], ['special'], ['dark', 'woody']),
+
+  'Amarys Femme': profile(['spring', 'summer', 'autumn'], ['day'], ['daily', 'office'], ['floral', 'sweet', 'fresh'], 'limited'),
+  'Burberry Goodness': profile(['autumn', 'winter'], ['day', 'evening'], ['daily', 'special'], ['sweet', 'floral'], 'limited'),
+  'Burberry Her': profile(['spring', 'summer', 'autumn'], ['day', 'evening'], ['daily', 'special'], ['fruity', 'sweet', 'floral']),
+  'Chanel Chance': profile(['spring', 'summer', 'autumn'], ['day', 'evening'], ['office', 'special'], ['floral', 'fresh', 'woody']),
+  'Chloe Nomade': profile(['spring', 'autumn'], ['day', 'evening'], ['daily', 'office'], ['woody', 'floral', 'fruity']),
+  'Coco Mademoiselle': profile(['spring', 'autumn', 'winter'], ['day', 'evening'], ['office', 'special'], ['floral', 'woody', 'fresh']),
+  'Creed For Her': profile(['spring', 'summer', 'autumn'], ['day', 'evening'], ['daily', 'special'], ['fruity', 'floral', 'sweet'], 'limited'),
+  "Dior J'adore": profile(['spring', 'summer', 'autumn'], ['day', 'evening'], ['office', 'special'], ['floral', 'fresh']),
+  'Gucci Flora Magnolia': profile(['spring', 'summer'], ['day'], ['daily', 'office'], ['floral', 'fresh']),
+  'Guidance 46': profile(['autumn', 'winter'], ['evening'], ['special'], ['floral', 'sweet', 'woody']),
+  'Hypnotic Poison': profile(['autumn', 'winter'], ['evening'], ['special'], ['sweet', 'floral']),
+  'Narciso For Her': profile(['spring', 'autumn', 'winter'], ['day', 'evening'], ['daily', 'office', 'special'], ['floral', 'woody']),
+  'Shiseido Zen': profile(['spring', 'summer', 'autumn'], ['day'], ['daily', 'office'], ['fruity', 'fresh', 'woody']),
+  'Valaya': profile(['spring', 'summer', 'autumn'], ['day'], ['daily', 'office', 'special'], ['fresh', 'floral', 'fruity']),
+  'Voce Viva Intense': profile(['spring', 'autumn', 'winter'], ['day', 'evening'], ['daily', 'special'], ['floral', 'sweet', 'fresh']),
+  'YSL Libre': profile(['spring', 'autumn', 'winter'], ['day', 'evening'], ['office', 'special'], ['floral', 'sweet', 'fresh']),
+  'Nomade': profile(['spring', 'autumn'], ['day', 'evening'], ['daily', 'office'], ['woody', 'floral', 'fruity'], 'limited'),
+
+  'Baccarat Rouge 540': profile(['spring', 'autumn', 'winter'], ['evening'], ['special'], ['sweet', 'woody', 'floral']),
+  'Black Afgano': profile(['autumn', 'winter'], ['evening'], ['special'], ['dark', 'woody']),
+  'Blue Talisman': profile(['spring', 'summer'], ['day'], ['daily', 'office'], ['fresh', 'fruity', 'woody']),
+  'Carios': profile(['spring', 'summer', 'autumn'], ['day'], ['daily', 'office'], ['fresh', 'woody'], 'limited'),
+  'Devils Intrigue': profile(['autumn', 'winter'], ['evening'], ['special'], ['dark', 'sweet'], 'limited'),
+  'Dior Gris': profile(['spring', 'autumn'], ['day', 'evening'], ['office', 'special'], ['floral', 'woody', 'fruity']),
+  'Oud Ispahan': profile(['autumn', 'winter'], ['evening'], ['special'], ['dark', 'woody', 'floral']),
+  'Narcotic': profile(['spring', 'summer', 'autumn'], ['evening'], ['special'], ['floral', 'sweet'], 'limited'),
+  'Hibiscus Mahajad': profile(['spring', 'autumn', 'winter'], ['evening'], ['special'], ['floral', 'fruity', 'sweet']),
+  'Imagination': profile(['spring', 'summer', 'autumn'], ['day'], ['daily', 'office', 'special'], ['fresh', 'woody']),
+  'Musk Therapy': profile(['spring', 'summer'], ['day'], ['daily', 'office'], ['fresh', 'floral', 'fruity']),
+  'Oud For Greatness': profile(['autumn', 'winter'], ['evening'], ['special'], ['dark', 'woody']),
+  'Wild Rush': profile(['spring', 'summer', 'autumn'], ['day'], ['daily', 'office'], ['fresh', 'woody'], 'limited'),
+  'Khamrah': profile(['autumn', 'winter'], ['evening'], ['daily', 'special'], ['sweet', 'dark']),
+  'Layton': profile(['spring', 'autumn', 'winter'], ['day', 'evening'], ['daily', 'special'], ['sweet', 'fruity', 'woody']),
+  'Ganymede': profile(['spring', 'autumn'], ['day', 'evening'], ['office', 'special'], ['woody', 'dark', 'fresh']),
+  'Marfa Memo': profile(['spring', 'summer', 'autumn'], ['day', 'evening'], ['special'], ['floral', 'woody', 'sweet']),
+  'Molecule 02': profile(['spring', 'summer', 'autumn', 'winter'], ['day', 'evening'], ['daily', 'office'], ['fresh']),
+  'Arabian Tonka': profile(['autumn', 'winter'], ['evening'], ['special'], ['sweet', 'woody', 'dark']),
+  'Oud Maracuja': profile(['autumn', 'winter'], ['evening'], ['special'], ['fruity', 'woody', 'dark']),
+  'Oud Save The King': profile(['autumn', 'winter'], ['day', 'evening'], ['office', 'special'], ['woody', 'dark']),
+  'Part Of Lady': profile(['spring', 'autumn'], ['day'], ['daily', 'office'], ['floral', 'sweet'], 'limited'),
+  'Kirke': profile(['spring', 'summer', 'autumn'], ['day', 'evening'], ['daily', 'special'], ['fruity', 'sweet']),
+  'Bitter Peach': profile(['autumn', 'winter'], ['evening'], ['special'], ['fruity', 'sweet', 'dark']),
+  'Black Orchid': profile(['autumn', 'winter'], ['evening'], ['special'], ['dark', 'floral', 'woody']),
+  'Vanilla Sex': profile(['autumn', 'winter'], ['evening'], ['special'], ['sweet', 'woody']),
+  'Torino 21': profile(['spring', 'summer'], ['day'], ['daily', 'office'], ['fresh']),
+  'Vanilla Powder': profile(['spring', 'autumn', 'winter'], ['day', 'evening'], ['daily', 'office'], ['sweet', 'woody']),
+  'Erba Pura': profile(['spring', 'summer', 'autumn'], ['day', 'evening'], ['daily', 'special'], ['fruity', 'sweet', 'fresh']),
+  'Naxos': profile(['spring', 'autumn', 'winter'], ['evening'], ['special'], ['sweet', 'dark', 'fresh']),
+  'Ombre Nomade': profile(['autumn', 'winter'], ['evening'], ['special'], ['dark', 'woody', 'fruity']),
+  'Huram Blanc': profile(['spring', 'autumn', 'winter'], ['day', 'evening'], ['daily', 'office'], ['woody'], 'limited')
+}

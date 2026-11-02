@@ -8,7 +8,7 @@ export const translations = {
     journal: 'KOKU GÜNLÜĞÜ', heroFirst: 'Kendine ait', heroEmphasis: 'bir iz', heroLast: 'bul.', heroText: 'Parfümleri keşfet, koku notalarını tanı ve sana en çok yakışanı bul.', lucky: 'Bir parfüm keşfet',
     library: 'PARFÜM KÜTÜPHANESİ', headingFirst: 'Bugün ne', headingEmphasis: 'hissetmek', headingLast: 'istersin?', intro: 'Koku ailelerine göre parfümleri keşfet, kendi imzanı bul.',
     categories: { Tümü: 'Tüm parfümler', Erkek: 'Erkek', Kadın: 'Kadın', Unisex: 'Unisex' }, search: 'Parfüm veya nota ara', sort: 'Sırala', featured: 'Öne çıkanlar', nameSort: 'İsim (A–Z)', favoriteCollection: 'Favori parfümlerin', clear: 'Filtreleri temizle', noResults: 'Parfüm bulunamadı', noResultsText: 'Başka bir isim, nota veya kategori deneyebilirsin.', showAll: 'Tüm parfümleri göster',
-    tagline: 'Kokunun sende kalan hali.', footerText: 'Parfümler, koku notaları ve kişisel keşifler.', view: 'İncele', addFavorite: 'Favorilere ekle', removeFavorite: 'Favorilerden çıkar', saved: 'Favorilerde', close: 'Kapat', sillage: 'YAYILIM', notes: 'KOKU NOTALARI', image: 'parfüm görseli', price: 'Fiyat',
+    tagline: 'Kokunun sende kalan hali.', footerText: 'Kokuların izinde, notaların ve kişisel keşiflerin dünyasında.', view: 'İncele', addFavorite: 'Favorilere ekle', removeFavorite: 'Favorilerden çıkar', saved: 'Favorilerde', close: 'Kapat', sillage: 'YAYILIM', notes: 'KOKU NOTALARI', image: 'parfüm görseli', price: 'Fiyat',
     rateLoading: 'Kur yükleniyor', rateUnavailable: 'TL fiyatı için kur alınamadı', rateStale: 'Son alınan kur kullanılıyor', rateUpdated: 'Kur güncellemesi', hourly: 'Saatlik güncellenir', usdRate: '1 USD', tryCurrency: 'TL', estimatedPrice: 'Yaklaşık TL fiyatı'
   },
   en: {
@@ -18,7 +18,7 @@ export const translations = {
     journal: 'SCENT JOURNAL', heroFirst: 'Find a scent', heroEmphasis: 'that feels', heroLast: 'like you.', heroText: 'Discover perfumes, explore their notes and find the one that feels like you.', lucky: 'Discover a perfume',
     library: 'PERFUME LIBRARY', headingFirst: 'How do you want', headingEmphasis: 'to feel', headingLast: 'today?', intro: 'Explore perfumes by scent family and find your signature.',
     categories: { Tümü: 'All fragrances', Erkek: 'Men', Kadın: 'Women', Unisex: 'Unisex' }, search: 'Search fragrance or note', sort: 'Sort', featured: 'Featured', nameSort: 'Name (A–Z)', favoriteCollection: 'Your favorites', clear: 'Clear filters', noResults: 'No fragrances found', noResultsText: 'Try a different name, note or category.', showAll: 'Show all fragrances',
-    tagline: 'The feeling a fragrance leaves behind.', footerText: 'Perfumes, scent notes and personal discoveries.', view: 'Explore', addFavorite: 'Add to favorites', removeFavorite: 'Remove from favorites', saved: 'In your favorites', close: 'Close', sillage: 'PROJECTION', notes: 'SCENT NOTES', image: 'fragrance illustration', price: 'Price',
+    tagline: 'The feeling a fragrance leaves behind.', footerText: 'Following the trail of fragrance into a world of notes and personal discoveries.', view: 'Explore', addFavorite: 'Add to favorites', removeFavorite: 'Remove from favorites', saved: 'In your favorites', close: 'Close', sillage: 'PROJECTION', notes: 'SCENT NOTES', image: 'fragrance illustration', price: 'Price',
     rateLoading: 'Loading exchange rate', rateUnavailable: 'TRY conversion is unavailable', rateStale: 'Using the last available rate', rateUpdated: 'Rate updated', hourly: 'Updated hourly', usdRate: '1 USD', tryCurrency: 'TRY', estimatedPrice: 'Approximate TRY price'
   },
   ar: {
@@ -28,7 +28,7 @@ export const translations = {
     journal: 'يوميات العطر', heroFirst: 'اعثر على عطر', heroEmphasis: 'يترك أثراً', heroLast: 'يشبهك.', heroText: 'اكتشف العطور وتعرّف على نفحاتها واعثر على العطر الذي يشبهك.', lucky: 'اكتشف عطراً',
     library: 'مكتبة العطور', headingFirst: 'بماذا تريد', headingEmphasis: 'أن تشعر', headingLast: 'اليوم؟', intro: 'اكتشف عطرك المميز في مجموعتنا المرتبة حسب العائلات العطرية.',
     categories: { Tümü: 'كل العطور', Erkek: 'رجالي', Kadın: 'نسائي', Unisex: 'للجنسين' }, search: 'ابحث عن عطر أو نفحة', sort: 'ترتيب', featured: 'مختاراتنا', nameSort: 'الاسم (A–Z)', favoriteCollection: 'عطورك المفضلة', clear: 'مسح التصفية', noResults: 'لم يتم العثور على عطر', noResultsText: 'جرّب اسماً أو نفحة أو فئة أخرى.', showAll: 'عرض كل العطور',
-    tagline: 'الأثر الذي يتركه عطرك فيك.', footerText: 'العطور والنفحات والاكتشافات الشخصية.', view: 'اكتشف', addFavorite: 'أضف إلى المفضلة', removeFavorite: 'إزالة من المفضلة', saved: 'في المفضلة', close: 'إغلاق', sillage: 'الفوحان', notes: 'نفحات العطر', image: 'رسم توضيحي للعطر', price: 'السعر',
+    tagline: 'الأثر الذي يتركه عطرك فيك.', footerText: 'على خطى العطور، في عالم النفحات والاكتشافات الشخصية.', view: 'اكتشف', addFavorite: 'أضف إلى المفضلة', removeFavorite: 'إزالة من المفضلة', saved: 'في المفضلة', close: 'إغلاق', sillage: 'الفوحان', notes: 'نفحات العطر', image: 'رسم توضيحي للعطر', price: 'السعر',
     rateLoading: 'جارٍ تحميل سعر الصرف', rateUnavailable: 'تحويل الليرة غير متاح حالياً', rateStale: 'يُستخدم آخر سعر صرف متاح', rateUpdated: 'تحديث سعر الصرف', hourly: 'يُحدّث كل ساعة', usdRate: '1 USD', tryCurrency: 'ليرة تركية', estimatedPrice: 'السعر التقريبي بالليرة التركية'
   }
 }

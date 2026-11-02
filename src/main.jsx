@@ -315,8 +315,8 @@ function App() {
   return <div className="app-shell">
     <header className="topbar" inert={dialogOpen}>
       <div className="topbar-inner">
-        <a className="brand" href="#top" aria-label={t.home}><span className="brand-mark">A</span><span>ARVEN</span></a>
-        <nav className="main-nav" aria-label={t.menu}><a href="#kesif">{t.discover}</a><a href="#notlar">{t.scentNotes}</a><a href="#hakkinda">{t.about}</a></nav>
+        <a className="brand" href="/" aria-label={t.home}><span className="brand-mark">A</span><span>ARVEN</span></a>
+        <nav className="main-nav" aria-label={t.menu}><a href="#notlar">{t.perfumes}</a><a href="#hakkinda">{t.about}</a></nav>
         <div className="top-actions">
           <div className="language-flags" role="group" aria-label={t.language} dir="ltr">
             {languages.map(language => <button key={language.code} type="button" className={`language-button ${lang === language.code ? 'active' : ''}`} onClick={() => setLang(language.code)} aria-label={language.label} title={language.label} aria-pressed={lang === language.code}><Flag language={language.code}/></button>)}
